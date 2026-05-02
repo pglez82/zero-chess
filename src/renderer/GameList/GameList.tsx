@@ -25,6 +25,7 @@ export default function GameList({
   const [checked, setChecked] = useState<number[]>([]);
   const [allChecked, setAllChecked] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [randomCount, setRandomCount] = useState(300);
   const [searchTerm, setSearchTerm] = useState('');
   const listRef = useRef<HTMLUListElement>(null);
   const [loading, setLoading] = useState(false);
@@ -60,6 +61,19 @@ export default function GameList({
 
     setAllChecked(!allChecked);
   };
+
+  const handleRandomSelect = () => {
+    const unanalyzedIndexes = games
+      .map((_, index) => index)
+      .filter((index) => !games[index].getGame().analysis);
+
+    const shuffled = [...unanalyzedIndexes].sort(() => Math.random() - 0.5);
+    const selectedRandomly = shuffled.slice(0, randomCount);
+
+    setChecked(selectedRandomly);
+    setAllChecked(false);
+  };
+
 
   const handleToggle = (value: number) => {
     if (!games[value].getGame().analysis) {
@@ -207,12 +221,23 @@ export default function GameList({
               label="Buscar por nombre del rival"
               onChange={(e) => handleSearchTermChange(e.target.value)}
             />
-            <Stack spacing={5} sx={{ height: '2.3em' }} direction="row">
+            <Stack spacing={5} direction="row" alignItems="center">
               <IconButton aria-label="statistics" onClick={handleStatistics}>
                 <Troubleshoot />
               </IconButton>
-              <Button fullWidth variant="contained" onClick={handleToggleAll}>
+              <Button variant="contained" onClick={handleToggleAll}>
                 Seleccionar todas
+              </Button>
+              <TextField
+                size="small"
+                type="number"
+                label="N"
+                value={randomCount}
+                onChange={(e) => setRandomCount(parseInt(e.target.value, 10) || 0)}
+                sx={{ width: '80px' }}
+              />
+              <Button variant="contained" onClick={handleRandomSelect}>
+                Random
               </Button>
             </Stack>
             <List ref={listRef} sx={{ maxHeight: '45vh', overflow: 'auto' }}>
