@@ -93,20 +93,21 @@ export function calculateErrors(
   const parsedAdvantage = parseAdvantage(advantage);
   parsedAdvantage.unshift(0);
   const errors = {
-    whitePlayer: 0,
-    blackPlayer: 0,
+    whitePlayer: [] as number[],
+    blackPlayer: [] as number[],
   };
 
   for (let i = 0; i < parsedAdvantage.length - 1; i += 1) {
     const difference = parsedAdvantage[i] - parsedAdvantage[i + 1];
     if (i % 2 === 0) {
       if (difference >= threshold1 && difference < threshold2) {
-        errors.whitePlayer += 1;
+        errors.whitePlayer.push(i);
       }
     } else if (-difference >= threshold1 && -difference < threshold2) {
-      errors.blackPlayer += 1;
+      errors.blackPlayer.push(i);
     }
   }
 
   return errors;
 }
+

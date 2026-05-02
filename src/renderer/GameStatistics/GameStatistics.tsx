@@ -4,6 +4,7 @@ import Carousel from 'react-material-ui-carousel';
 import { useNavigate } from 'react-router-dom';
 import StatsPieChart from './StatsPieChart';
 import StatsBarChart from './StatsBarChart';
+import RepeatedMistakes from './RepeatedMistakes';
 import './GameStatistics.css';
 
 export default function GameStatistics({
@@ -41,11 +42,11 @@ export default function GameStatistics({
     const mistakes = game.analysis!.mistakes[`${playerSide}Player`];
     const inaccuracies = game.analysis!.inaccuracies[`${playerSide}Player`];
 
-    stats.blunders += blunders;
-    stats.mistakes += mistakes;
-    stats.inaccuracies += inaccuracies;
+    stats.blunders += Array.isArray(blunders) ? blunders.length : 0;
+    stats.mistakes += Array.isArray(mistakes) ? mistakes.length : 0;
+    stats.inaccuracies += Array.isArray(inaccuracies) ? inaccuracies.length : 0;
 
-    const totalErrors = blunders + mistakes + inaccuracies;
+    const totalErrors = blunders.length + mistakes.length + inaccuracies.length;
     if (playerSide === 'white') {
       stats.whiteErrors += totalErrors;
     } else {
@@ -273,6 +274,7 @@ export default function GameStatistics({
             )}
           </Box>
         </Carousel>
+        <RepeatedMistakes games={games} />
         <Box className="flex-end">
           <Button color="secondary" variant="contained" onClick={handleBack}>
             Atrás

@@ -11,11 +11,10 @@ export default function AdviceSummarySide({
   game: GameDecorator;
 }) {
   const Icon = side === 'white' ? Circle : PanoramaFishEye;
-  const { accuracy, inaccuracies, mistakes, blunders } =
-    game.getGame().analysis!;
-  const sideInaccuracies = inaccuracies[`${side}Player`];
-  const sideMistakes = mistakes[`${side}Player`];
-  const sideBlunders = blunders[`${side}Player`];
+  const analysis = game.getGame().analysis;
+  const sideInaccuracies = analysis?.inaccuracies?.[`${side}Player`] ?? [];
+  const sideMistakes = analysis?.mistakes?.[`${side}Player`] ?? [];
+  const sideBlunders = analysis?.blunders?.[`${side}Player`] ?? [];
 
   return (
     <Stack className="stack">
@@ -23,20 +22,20 @@ export default function AdviceSummarySide({
         <Icon sx={{ flex: '0 1 4ch', fontSize: '1.5em' }} />
         <span>{game.parsePlayerName(side)}</span>
       </div>
-      <div className={`row ${sideInaccuracies > 0 ? 'inaccuracies' : ''}`}>
-        <span>{sideInaccuracies}</span>
-        <span>{sideInaccuracies === 1 ? 'imprecisión' : 'imprecisiones'}</span>
+      <div className={`row ${sideInaccuracies.length > 0 ? 'inaccuracies' : ''}`}>
+        <span>{sideInaccuracies.length}</span>
+        <span>{sideInaccuracies.length === 1 ? 'imprecisión' : 'imprecisiones'}</span>
       </div>
-      <div className={`row ${sideMistakes > 0 ? 'mistakes' : ''}`}>
-        <span>{sideMistakes}</span>
-        <span>{sideMistakes === 1 ? 'error' : 'errores'}</span>
+      <div className={`row ${sideMistakes.length > 0 ? 'mistakes' : ''}`}>
+        <span>{sideMistakes.length}</span>
+        <span>{sideMistakes.length === 1 ? 'error' : 'errores'}</span>
       </div>
-      <div className={`row ${sideBlunders > 0 ? 'blunders' : ''}`}>
-        <span>{sideBlunders}</span>
-        <span>{sideBlunders === 1 ? 'error grave' : 'errores graves'}</span>
+      <div className={`row ${sideBlunders.length > 0 ? 'blunders' : ''}`}>
+        <span>{sideBlunders.length}</span>
+        <span>{sideBlunders.length === 1 ? 'error grave' : 'errores graves'}</span>
       </div>
       <div className="row">
-        <span>{Math.round(accuracy[`${side}PlayerAverage`])}%</span>
+        <span>{Math.round(analysis?.accuracy?.[`${side}PlayerAverage`] ?? 0)}%</span>
         <span>Precisión</span>
       </div>
     </Stack>
