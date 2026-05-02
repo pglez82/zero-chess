@@ -1,0 +1,19 @@
+{
+  "name": "zero-chess",
+  "version": "1.0.0",
+  "description": "Sistema de análisis de precisión en partidas de ajedrez",
+  "license": "MIT",
+  "author": {
+    "name": "Óscar Davila Sampedro",
+    "email": "oscardavilasampedro@gmail.com"
+  },
+  "main": "./dist/main/main.js",
+  "scripts": {
+    "rebuild": "node -r ts-node/register ../../.erb/scripts/electron-rebuild.js",
+    "postinstall": "npm run rebuild && npm run link-modules",
+    "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.4.3"
+  }
+}
