@@ -6,6 +6,10 @@ export const COUNT_GAMES_BY_USER_ID = `
   SELECT COUNT(*) as count FROM game WHERE black_user_id = @id OR white_user_id = @id
 `;
 
+export const COUNT_ANALYZED_GAMES_BY_USER_ID = `
+  SELECT COUNT(*) as count FROM game WHERE (black_user_id = @id OR white_user_id = @id) AND analysis IS NOT NULL
+`;
+
 export const INSERT_GAME = `
   INSERT INTO game (
     id, initial, increment, totalTime, perf, speed, moves,

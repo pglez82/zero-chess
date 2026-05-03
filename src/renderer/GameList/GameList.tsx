@@ -49,6 +49,8 @@ export default function GameList({
   const [currentPage, setCurrentPage] = useState(1);
   const [randomCount, setRandomCount] = useState(300);
   const [searchTerm, setSearchTerm] = useState('');
+  const [gamesCount, setGamesCount] = useState(0);
+  const [analyzedCount, setAnalyzedCount] = useState(0);
   const listRef = useRef<HTMLUListElement>(null);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -64,6 +66,17 @@ export default function GameList({
       setCurrentPage(parseInt(savedPage, 10));
     }
   }, []);
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      const total = await window.electron.ipcRenderer.getPlayerGamesCount(username);
+      const analyzed = await window.electron.ipcRenderer.getAnalyzedGamesCount(username);
+      setGamesCount(total);
+      setAnalyzedCount(analyzed);
+    };
+
+    fetchCounts();
+  }, [username]);
 
   useEffect(() => {
     if (listRef.current) {
@@ -257,6 +270,12 @@ export default function GameList({
 
       setEstimatedTime(null);
       setProgress(0);
+
+      // Refetch counts after analysis
+      const total = await window.electron.ipcRenderer.getPlayerGamesCount(username);
+      const analyzed = await window.electron.ipcRenderer.getAnalyzedGamesCount(username);
+      setGamesCount(total);
+      setAnalyzedCount(analyzed);
     }
   };
 
@@ -309,6 +328,13 @@ export default function GameList({
               <Button variant="contained" onClick={handleRandomSelect}>
                 Random
               </Button>
+              {gamesCount > 0 && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <span>{analyzedCount}</span>
+                  <span>/</span>
+                  <span>{gamesCount}</span>
+                </Box>
+              )}
             </Stack>
             <List ref={listRef} sx={{ maxHeight: '45vh', overflow: 'auto' }}>
               {currentGames.map((game) => (

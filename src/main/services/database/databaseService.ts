@@ -1,4 +1,4 @@
-import { COUNT_GAMES_BY_USER_ID, CREATE_GAME_TABLE, INSERT_GAME, SELECT_GAME_BY_USER_ID, UPDATE_GAME_ANALYSIS } from './helpers/queries';
+import { COUNT_GAMES_BY_USER_ID, CREATE_GAME_TABLE, INSERT_GAME, SELECT_GAME_BY_USER_ID, UPDATE_GAME_ANALYSIS, COUNT_ANALYZED_GAMES_BY_USER_ID } from './helpers/queries';
 import { mapGameToRow, mapRowToGame } from './helpers/mapping';
 import { Game } from '../../../interfaces';
 import Database from 'better-sqlite3';
@@ -43,6 +43,16 @@ export function getPlayerGames(id: string) {
 export function getPlayerGamesCount(id: string) {
   const db = connectDatabase();
   const stm = db.prepare(COUNT_GAMES_BY_USER_ID);
+
+  const result = stm.get({ id }) as CountResult;
+
+  db.close();
+  return result.count;
+}
+
+export function getAnalyzedGamesCount(id: string) {
+  const db = connectDatabase();
+  const stm = db.prepare(COUNT_ANALYZED_GAMES_BY_USER_ID);
 
   const result = stm.get({ id }) as CountResult;
 
