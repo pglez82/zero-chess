@@ -44,15 +44,20 @@ jest.mock('react-time-ago', () => 'div');
 
 const calculateErrorsMock = jest.fn();
 jest.mock('../../main/services/engine/engineService', () => ({
-  getGameAccuracy: () => jest.fn(),
-  getGameAdvantage: () => jest.fn(),
+  calculateAccuracyFromCentipawns: () => jest.fn(),
+  calculateAdvantageFromCentipawns: () => jest.fn(),
   calculateErrors: () => calculateErrorsMock(),
+  createFullAnalysis: () => jest.fn(),
 }));
 
-const connectEngineMock = jest.fn();
+// Mock createEnginePool to return a mock engine
+const mockEngine = {
+  quit: jest.fn(),
+};
+
 jest.mock('../../main/services/engine/helpers/engine', () => ({
-  disconnectEngine: () => jest.fn(),
-  connectEngine: () => connectEngineMock(),
+  createEnginePool: () => Promise.resolve([mockEngine]),
+  getGameCentipawnsOnEngine: () => Promise.resolve([]),
 }));
 
 describe('GameList Component', () => {
@@ -153,7 +158,6 @@ describe('GameList Component', () => {
     fireEvent.click(analyseButton);
 
     await waitFor(() => {
-      expect(connectEngineMock).toHaveBeenCalledTimes(1);
       expect(calculateErrorsMock).toHaveBeenCalledTimes(games.length * 3);
     });
 

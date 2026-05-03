@@ -1,44 +1,35 @@
-import { getGameAccuracy, getGameAdvantage, calculateErrors } from './engineService';
-
-const getGameCentipawnsMock = jest.fn();
-jest.mock('./helpers/engine', () => ({
-  getGameCentipawns: () => getGameCentipawnsMock(),
-}));
+import {
+  calculateAccuracyFromCentipawns,
+  calculateAdvantageFromCentipawns,
+  calculateErrors,
+} from './engineService';
 
 describe('Chess Game Analysis Functions', () => {
-  describe('getGameAccuracy', () => {
-    it('should calculate accuracy averages correctly', async () => {
-      getGameCentipawnsMock.mockResolvedValueOnce([1000, 0]);
+  describe('calculateAccuracyFromCentipawns', () => {
+    it('should calculate accuracy averages correctly for winning game', () => {
+      // Positive centipawns means white is winning
+      const centipawns = [1000, 500];
 
-      let result = await getGameAccuracy([]);
-      expect(result).toEqual({
-        whitePlayerAverage: 100,
-        blackPlayerAverage: 100,
-      });
+      const result = calculateAccuracyFromCentipawns(centipawns);
+      expect(result.whitePlayerAverage).toBeCloseTo(100, 0);
+      expect(result.blackPlayerAverage).toBeCloseTo(0, 0);
+    });
 
-      getGameCentipawnsMock.mockResolvedValueOnce([-1000, 0]);
+    it('should calculate accuracy averages correctly for losing game', () => {
+      // Negative centipawns means black is winning
+      const centipawns = [-1000, -500];
 
-      result = await getGameAccuracy([]);
-      expect(result).toEqual({
-        whitePlayerAverage: 0,
-        blackPlayerAverage: 0,
-      });
-
-      getGameCentipawnsMock.mockResolvedValueOnce([-1000, -2000]);
-
-      result = await getGameAccuracy([]);
-      expect(result).toEqual({
-        whitePlayerAverage: 0,
-        blackPlayerAverage: 100,
-      });
+      const result = calculateAccuracyFromCentipawns(centipawns);
+      expect(result.whitePlayerAverage).toBeCloseTo(0, 0);
+      expect(result.blackPlayerAverage).toBeCloseTo(100, 0);
     });
   });
 
-  describe('getGameAdvantage', () => {
-    it('should calculate advantage correctly', async () => {
-      getGameCentipawnsMock.mockResolvedValueOnce([150, -150, '#0']);
+  describe('calculateAdvantageFromCentipawns', () => {
+    it('should calculate advantage correctly', () => {
+      const centipawns = [150, -150, '#0'];
 
-      const result = await getGameAdvantage([]);
+      const result = calculateAdvantageFromCentipawns(centipawns);
       expect(result).toEqual([1.5, -1.5, '#0']);
     });
   });
@@ -49,8 +40,8 @@ describe('Chess Game Analysis Functions', () => {
 
       const result = calculateErrors(advantage, 0.5, 1);
       expect(result).toEqual({
-        whitePlayer: 1,
-        blackPlayer: 1,
+        whitePlayer: [1],
+        blackPlayer: [3],
       });
     });
 
@@ -59,8 +50,8 @@ describe('Chess Game Analysis Functions', () => {
 
       const result = calculateErrors(advantage, 1, 1.5);
       expect(result).toEqual({
-        whitePlayer: 1,
-        blackPlayer: 1,
+        whitePlayer: [1],
+        blackPlayer: [3],
       });
     });
 
@@ -69,8 +60,8 @@ describe('Chess Game Analysis Functions', () => {
 
       const result = calculateErrors(advantage, 1.5, Infinity);
       expect(result).toEqual({
-        whitePlayer: 1,
-        blackPlayer: 1,
+        whitePlayer: [1],
+        blackPlayer: [3],
       });
     });
   });

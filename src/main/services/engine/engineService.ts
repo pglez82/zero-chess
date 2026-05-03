@@ -1,9 +1,18 @@
-import { getGameCentipawns } from './helpers/engine';
+/**
+ * Engine service functions for chess game analysis.
+ * These functions perform calculations on centipawn data returned from the chess engine.
+ */
 
+/**
+ * Calculate win percentage from centipawn evaluation
+ */
 function calculateWinPercentage(cp: number) {
   return 50 + 50 * (2 / (1 + Math.exp(-0.00368208 * cp)) - 1);
 }
 
+/**
+ * Calculate move accuracy from win percentages before and after a move
+ */
 function calculateAccuracy(wpBefore: number, wpAfter: number) {
   const delta = wpBefore - wpAfter;
   const penaltyFactor = delta > 0 ? delta ** 2 : delta;
@@ -13,18 +22,30 @@ function calculateAccuracy(wpBefore: number, wpAfter: number) {
   );
 }
 
+/**
+ * Parse mate notation to infinite value
+ */
 function parseMate(mate: string) {
   return parseInt(mate.substring(1), 10) > 0 ? Infinity : -Infinity;
 }
 
-export async function getGameAccuracy(moves: string[]) {
-  const centipawnsPerNode: (number | string)[] = await getGameCentipawns(moves);
-  const winPercentagePerNode: number[] = centipawnsPerNode.map((cp) =>
+/**
+ * Calculate accuracy for a game given centipawn evaluations per move.
+ * @param centipawns - Array of centipawn values from the engine for each move
+ * @returns Object with whitePlayerAverage and blackPlayerAverage accuracy percentages
+ */
+export function calculateAccuracyFromCentipawns(
+  centipawns: (number | string)[],
+): { whitePlayerAverage: number; blackPlayerAverage: number } {
+  // We don't include the last centipawn value as it's after the last move
+  const evaluationsForAccuracy = centipawns.slice(0, centipawns.length - 1);
+  
+  const winPercentagePerNode: number[] = evaluationsForAccuracy.map((cp) =>
     typeof cp === 'string'
       ? calculateWinPercentage(parseMate(cp))
       : calculateWinPercentage(cp),
   );
-  winPercentagePerNode.unshift(50);
+  winPercentagePerNode.unshift(50); // Starting position is 50%
 
   let whiteSum = 0;
   let blackSum = 0;
@@ -47,21 +68,28 @@ export async function getGameAccuracy(moves: string[]) {
     }
   }
 
-  const whitePlayerAverage = whiteSum / whiteCount;
-  const blackPlayerAverage = blackSum / blackCount;
+  const whitePlayerAverage = whiteCount > 0 ? whiteSum / whiteCount : 100;
+  const blackPlayerAverage = blackCount > 0 ? blackSum / blackCount : 100;
 
   return { whitePlayerAverage, blackPlayerAverage };
 }
 
-export async function getGameAdvantage(moves: string[]) {
-  const centipawnsPerNode: (number | string)[] = await getGameCentipawns(moves);
-  const advantagePerNode = centipawnsPerNode.map((cp) =>
+/**
+ * Calculate advantage plot data from centipawn evaluations
+ * @param centipawns - Array of centipawn values from the engine
+ * @returns Array of advantage values in pawns (centipawns / 100) or mate notation
+ */
+export function calculateAdvantageFromCentipawns(
+  centipawns: (number | string)[],
+): (string | number)[] {
+  return centipawns.map((cp) =>
     typeof cp === 'number' ? cp / 100 : cp,
   );
-
-  return advantagePerNode;
 }
 
+/**
+ * Parse advantage data for display
+ */
 export function parseAdvantage(advantage: (string | number)[]) {
   let previousValue = 0;
 
@@ -85,13 +113,20 @@ export function parseAdvantage(advantage: (string | number)[]) {
   return parsedAdvantage;
 }
 
+/**
+ * Calculate mistakes, inaccuracies, and blunders from advantage data
+ * @param advantage - Array of advantage values (from parseAdvantage)
+ * @param threshold1 - Lower threshold for error classification
+ * @param threshold2 - Upper threshold for error classification
+ * @returns Object with whitePlayer and blackPlayer arrays of move indices where errors occurred
+ */
 export function calculateErrors(
   advantage: (string | number)[],
   threshold1: number,
   threshold2: number,
 ) {
   const parsedAdvantage = parseAdvantage(advantage);
-  parsedAdvantage.unshift(0);
+  parsedAdvantage.unshift(0); // Add initial zero for the starting position
   const errors = {
     whitePlayer: [] as number[],
     blackPlayer: [] as number[],
@@ -111,3 +146,29 @@ export function calculateErrors(
   return errors;
 }
 
+/**
+ * Full game analysis result type
+ */
+export interface GameAnalysisResult {
+  accuracy: { whitePlayerAverage: number; blackPlayerAverage: number };
+  advantage: (string | number)[];
+  mistakes: { whitePlayer: number[]; blackPlayer: number[] };
+  inaccuracies: { whitePlayer: number[]; blackPlayer: number[] };
+  blunders: { whitePlayer: number[]; blackPlayer: number[] };
+}
+
+/**
+ * Combine centipawns and moves into a full analysis result
+ */
+export function createFullAnalysis(
+  centipawns: (number | string)[],
+  moves: string[],
+): GameAnalysisResult {
+  const accuracy = calculateAccuracyFromCentipawns(centipawns);
+  const advantage = calculateAdvantageFromCentipawns(centipawns);
+  const mistakes = calculateErrors(advantage, 1, 1.5);
+  const inaccuracies = calculateErrors(advantage, 0.5, 1);
+  const blunders = calculateErrors(advantage, 1.5, Infinity);
+
+  return { accuracy, advantage, mistakes, inaccuracies, blunders };
+}

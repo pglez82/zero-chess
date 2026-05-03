@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
-import { calculateErrors, getGameAccuracy, getGameAdvantage } from '../../main/services/engine/engineService';
+import { calculateAccuracyFromCentipawns, calculateAdvantageFromCentipawns, calculateErrors } from '../../main/services/engine/engineService';
+import { createEnginePool, getGameCentipawnsOnEngine } from '../../main/services/engine/helpers/engine';
 import { Paper, List, Button, Stack, Pagination, Box, TextField, IconButton } from '@mui/material';
-import { connectEngine, disconnectEngine } from '../../main/services/engine/helpers/engine';
 import LinearProgressWithLabel from '../Home/LinearProgressWithLabel';
 import { ChangeEvent, useState, useEffect, useRef } from 'react';
 import { Troubleshoot } from '@mui/icons-material';
@@ -11,6 +11,28 @@ import GameTile from './GameTile';
 import './GameList.css';
 
 const GAMES_PER_PAGE = 10;
+
+// Analyze a single game using a specific engine worker and return all analysis data
+async function analyzeGameWithWorker(
+  engine: any,
+  game: GameDecorator,
+): Promise<{ 
+  centipawns: (number | string)[]; 
+  accuracy: { whitePlayerAverage: number; blackPlayerAverage: number };
+  advantage: (string | number)[];
+  moves: string[];
+}> {
+  const moves = game.getGameMoves();
+  
+  // Get centipawns for each move using the specific engine worker
+  const centipawns = await getGameCentipawnsOnEngine(engine, moves);
+  
+  // Calculate accuracy and advantage from centipawns
+  const accuracy = calculateAccuracyFromCentipawns(centipawns);
+  const advantage = calculateAdvantageFromCentipawns(centipawns);
+  
+  return { centipawns, accuracy, advantage, moves };
+}
 
 export default function GameList({
   games,
@@ -115,29 +137,22 @@ export default function GameList({
     localStorage.setItem('currentPage', page.toString());
   };
 
-  async function analyseGame(game: GameDecorator) {
-    const moves = game.getGameMoves();
-
-    const accuracy = await getGameAccuracy(moves);
-    const advantage = await getGameAdvantage(moves);
-    const mistakes = calculateErrors(advantage, 1, 1.5);
-    const inaccuracies = calculateErrors(advantage, 0.5, 1);
-    const blunders = calculateErrors(advantage, 1.5, Infinity);
-
-    return { advantage, accuracy, mistakes, inaccuracies, blunders };
-  }
-
   function updateEstimatedTime(
-    index: number,
-    totalTime: number,
     totalGames: number,
+    totalTime: number,
+    completedGames: number,
   ) {
-    const averageTimePerGame = totalTime / (index + 1);
-    const estimatedTotalTime = (averageTimePerGame * totalGames) / 1000;
+    const averageTimePerGame = totalTime / (completedGames || 1);
+    const remainingGames = totalGames - completedGames;
+    const estimatedTotalTime = (averageTimePerGame * remainingGames) / 1000;
 
-    const remainingTime = estimatedTotalTime - totalTime / 1000;
-    const minutes = Math.floor(remainingTime / 60);
-    const seconds = Math.floor(remainingTime % 60);
+    if (remainingGames <= 0) {
+      setEstimatedTime(null);
+      return;
+    }
+
+    const minutes = Math.floor(estimatedTotalTime / 60);
+    const seconds = Math.floor(estimatedTotalTime % 60);
     const formattedTime = `${String(minutes).padStart(2, '0')}:${String(
       seconds,
     ).padStart(2, '0')}`;
@@ -145,32 +160,87 @@ export default function GameList({
     setEstimatedTime(formattedTime);
   }
 
+  /* eslint-disable no-await-in-loop */
   async function analyseGames(gamesToAnalyse: GameDecorator[]) {
     const totalGames = gamesToAnalyse.length;
-    await connectEngine();
+    
+    // Get the stockfish path for engine pool initialization
+    const stockfishPath =
+      process.env.NODE_ENV === 'development'
+        ? '/services/engine/helpers/stockfish/stockfish.js'
+        : await window.electron.ipcRenderer.joinPath(
+            'services/engine/helpers/stockfish/stockfish.js',
+          );
+    
+    // Create a pool of engine instances (one per CPU core)
+    const engines = await createEnginePool(stockfishPath);
+    const numWorkers = engines.length;
 
     let totalTime = 0;
-    for (let i = 0; i < totalGames; i += 1) {
-      const game = gamesToAnalyse[i];
-      const startTime = performance.now();
+    let completedGames = 0;
 
-      const analysis = await analyseGame(game);
+    // Create a work queue with game indices
+    const workQueue = [...Array(totalGames).keys()];
 
-      game.setAnalysis(analysis);
-      await window.electron.ipcRenderer.updateGameAnalysis(
-        game.getGame().id,
-        analysis,
-      );
+    // Create worker tasks
+    const workerPromises = engines.map((engine, workerIndex) => async () => {
+      while (workQueue.length > 0) {
+        const gameIndex = workQueue.shift();
+        if (gameIndex === undefined) break;
 
-      const endTime = performance.now();
-      const gameTime = endTime - startTime;
+        const game = gamesToAnalyse[gameIndex];
+        const startTime = performance.now();
 
-      totalTime += gameTime;
-      setProgress(((i + 1) / totalGames) * 100);
-      updateEstimatedTime(i, totalTime, totalGames);
-    }
+        try {
+          // Analyze game using this specific engine worker
+          const { centipawns, accuracy, advantage } = await analyzeGameWithWorker(
+            engine,
+            game,
+          );
 
-    disconnectEngine();
+          // Calculate errors from advantage
+          const mistakes = calculateErrors(advantage, 1, 1.5);
+          const inaccuracies = calculateErrors(advantage, 0.5, 1);
+          const blunders = calculateErrors(advantage, 1.5, Infinity);
+
+          const analysis = { advantage, accuracy, mistakes, inaccuracies, blunders };
+
+          // Store analysis on the game object
+          game.setAnalysis(analysis);
+          
+          // Update database
+          await window.electron.ipcRenderer.updateGameAnalysis(
+            game.getGame().id,
+            analysis,
+          );
+
+          const endTime = performance.now();
+          const gameTime = endTime - startTime;
+          totalTime += gameTime;
+          completedGames += 1;
+          
+          // Update progress
+          setProgress((completedGames / totalGames) * 100);
+          updateEstimatedTime(totalGames, totalTime, completedGames);
+        } catch (error) {
+          console.error(`Error analyzing game ${game.getGame().id}:`, error);
+          completedGames += 1;
+        }
+      }
+    });
+
+    // Run all workers in parallel
+    await Promise.all(workerPromises.map((promiseFn) => promiseFn()));
+
+    // Clean up: quit all engine workers
+    engines.forEach((engine) => {
+      try {
+        engine.quit();
+      } catch (_e) {
+        // Ignore errors during cleanup
+      }
+    });
+    
     setChecked([]);
   }
 
