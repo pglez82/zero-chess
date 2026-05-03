@@ -41,7 +41,7 @@ export default function GameAnalysis() {
   function replayMoves(index: number) {
     const chess = new Chess();
 
-    for (let i = 0; i < index; i += 1) {
+    for (let i = 0; i <= index && i < moves.length; i += 1) {
       chess.move(moves[i]);
     }
 

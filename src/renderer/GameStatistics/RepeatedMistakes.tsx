@@ -121,40 +121,42 @@ export default function RepeatedMistakes({ games, username }: RepeatedMistakesPr
       <Typography variant="h6" gutterBottom>
         Posiciones con errores repetidos
       </Typography>
-      <List>
-        {repeatedPositions.map((pos, index) => (
-          <React.Fragment key={index}>
-            <ListItemButton
-              alignItems="flex-start"
-              onClick={() => {
-                navigate('/analysis', { 
-                  state: { 
-                    username, 
-                    game: pos.game,
-                    position: pos.fen 
-                  } 
-                });
-              }}
-              sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'action.hover' } }}
-            >
-              <ListItemText
-                primary={`Repetido ${pos.count} veces`}   
-                secondary={
-                  <Box component="div">
-                    <Typography variant="body2" color="text.primary" sx={{ wordBreak: 'break-all' }}>
-                      FEN: {pos.fen}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Movimientos previos: {pos.moves.length > 0 ? pos.moves.join(' ') : 'Ninguno'}
-                    </Typography>
-                  </Box>
-                }
-              />
-            </ListItemButton>
-            <Divider />
-          </React.Fragment>
-        ))}
-      </List>
+      <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
+        <List>
+          {repeatedPositions.map((pos, index) => (
+            <React.Fragment key={index}>
+              <ListItemButton
+                alignItems="flex-start"
+                onClick={() => {
+                  navigate('/analysis', { 
+                    state: { 
+                      username, 
+                      game: pos.game,
+                      position: pos.fen 
+                    } 
+                  });
+                }}
+                sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'action.hover' } }}
+              >
+                <ListItemText
+                  primary={`Repetido ${pos.count} veces`}   
+                  secondary={
+                    <Box component="div">
+                      <Typography variant="body2" color="text.primary" sx={{ wordBreak: 'break-all' }}>
+                        FEN: {pos.fen}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Movimientos previos: {pos.moves.length > 0 ? pos.moves.join(' ') : 'Ninguno'}
+                      </Typography>
+                    </Box>
+                  }
+                />
+              </ListItemButton>
+              <Divider />
+            </React.Fragment>
+          ))}
+        </List>
+      </Box>
     </Paper>
   );
 }
