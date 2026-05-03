@@ -7,7 +7,7 @@ import { Chessboard } from 'react-chessboard';
 import AdvantageChart from './AdvantageChart';
 import MoveTable from './MoveTable';
 import { Chess } from 'chess.js';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 export default function GameAnalysis() {
   const { username, game, position } = useLocation().state as {
@@ -15,12 +15,26 @@ export default function GameAnalysis() {
     username: string;
     position?: string;
   };
+  const moves = game.getGameMoves();
+  
+  // Find the move index that matches the loaded FEN
+  const startingIndex = useMemo(() => {
+    if (!position) return 0;
+    const chess = new Chess();
+    for (let i = 0; i < moves.length; i++) {
+      chess.move(moves[i]);
+      if (chess.fen() === position) {
+        return i + 1; // currentIndex represents moves applied
+      }
+    }
+    return 0;
+  }, [moves, position]);
+
   const [boardPosition, setBoardPosition] = useState(
     position || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
   );
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(startingIndex);
   const { analysis } = game.getGame();
-  const moves = game.getGameMoves();
   const navigate = useNavigate();
 
   function replayMoves(index: number) {
