@@ -1,10 +1,12 @@
 import React, { useMemo } from 'react';
 import { GameDecorator } from '../../interfaces';
 import { Chess } from 'chess.js';
+import { useNavigate } from 'react-router-dom';
 import { 
   List, 
   ListItem, 
   ListItemText, 
+  ListItemButton,
   Typography, 
   Paper, 
   Divider,
@@ -13,6 +15,7 @@ import {
 
 interface RepeatedMistakesProps {
   games: GameDecorator[];
+  username: string;
 }
 
 interface MistakePosition {
@@ -21,9 +24,13 @@ interface MistakePosition {
   moves: string[];
 }
 
-export default function RepeatedMistakes({ games }: RepeatedMistakesProps) {
+export default function RepeatedMistakes({ games, username }: RepeatedMistakesProps) {
+  const navigate = useNavigate();
+
   const repeatedPositions = useMemo(() => {
-    const counts: { [key: string]: { count: number; moves: string[] } } = {};
+    const counts: { 
+      [key: string]: { count: number; moves: string[]; gameId: number; game: GameDecorator } 
+    } = {};
 
     games.forEach((game) => {
       const analysis = game.getGame().analysis;
@@ -81,7 +88,7 @@ export default function RepeatedMistakes({ games }: RepeatedMistakesProps) {
           if (counts[fen]) {
             counts[fen].count += 1;
           } else {
-            counts[fen] = { count: 1, moves: moves.slice(0, idx) };
+            counts[fen] = { count: 1, moves: moves.slice(0, idx), gameId: game.getGame().id, game };
           }
         }
       });
@@ -93,6 +100,8 @@ export default function RepeatedMistakes({ games }: RepeatedMistakesProps) {
         fen,
         count: value.count,
         moves: value.moves,
+        gameId: value.gameId,
+        game: value.game,
       }))
       .sort((a, b) => b.count - a.count);
   }, [games]);
@@ -113,9 +122,21 @@ export default function RepeatedMistakes({ games }: RepeatedMistakesProps) {
       <List>
         {repeatedPositions.map((pos, index) => (
           <React.Fragment key={index}>
-            <ListItem alignItems="flex-start">
+            <ListItemButton
+              alignItems="flex-start"
+              onClick={() => {
+                navigate('/analysis', { 
+                  state: { 
+                    username, 
+                    game: pos.game,
+                    position: pos.fen 
+                  } 
+                });
+              }}
+              sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'action.hover' } }}
+            >
               <ListItemText
-                primary={`Repetido ${pos.count} veces`}
+                primary={`Repetido ${pos.count} veces`}   
                 secondary={
                   <Box component="div">
                     <Typography variant="body2" color="text.primary" sx={{ wordBreak: 'break-all' }}>
@@ -127,7 +148,7 @@ export default function RepeatedMistakes({ games }: RepeatedMistakesProps) {
                   </Box>
                 }
               />
-            </ListItem>
+            </ListItemButton>
             <Divider />
           </React.Fragment>
         ))}

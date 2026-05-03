@@ -10,12 +10,13 @@ import { Chess } from 'chess.js';
 import { useState } from 'react';
 
 export default function GameAnalysis() {
-  const { username, game } = useLocation().state as {
+  const { username, game, position } = useLocation().state as {
     game: GameDecorator;
     username: string;
+    position?: string;
   };
   const [boardPosition, setBoardPosition] = useState(
-    'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
+    position || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
   );
   const [currentIndex, setCurrentIndex] = useState(0);
   const { analysis } = game.getGame();

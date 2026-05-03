@@ -274,7 +274,7 @@ export default function GameStatistics({
             )}
           </Box>
         </Carousel>
-        <RepeatedMistakes games={games} />
+        <RepeatedMistakes games={games} username={username} />
         <Box className="flex-end">
           <Button color="secondary" variant="contained" onClick={handleBack}>
             Atrás
