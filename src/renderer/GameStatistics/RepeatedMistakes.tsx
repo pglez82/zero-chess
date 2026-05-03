@@ -29,20 +29,22 @@ export default function RepeatedMistakes({ games, username }: RepeatedMistakesPr
 
   const repeatedPositions = useMemo(() => {
     const counts: { 
-      [key: string]: { count: number; moves: string[]; gameId: number; game: GameDecorator } 
+      [key: string]: { count: number; moves: string[]; gameId: string; game: GameDecorator } 
     } = {};
 
-    games.forEach((game) => {
-      const analysis = game.getGame().analysis;
+    games.forEach((gameDecorator) => {
+      const game = gameDecorator.getGame();
+      const analysis = game.analysis;
       if (!analysis) return;
 
       const mistakes = analysis.mistakes as { whitePlayer?: any; blackPlayer?: any };
-      const whiteMistakes = Array.isArray(mistakes.whitePlayer) ? mistakes.whitePlayer : [];
-      const blackMistakes = Array.isArray(mistakes.blackPlayer) ? mistakes.blackPlayer : [];
-      const allMistakeIndices = [...whiteMistakes, ...blackMistakes];
+      const playerSide = gameDecorator.getSide(username);
+      const playerMistakeIndices = Array.isArray(mistakes[`${playerSide}Player`])
+        ? mistakes[`${playerSide}Player`]
+        : [];
 
       const chess = new Chess();
-      const moves = game.getGameMoves();
+      const moves = gameDecorator.getGameMoves();
       
       // We need to keep track of FENs at each move
       // The indices in mistakes refer to the index in the moves array (where move i happened)
@@ -75,7 +77,7 @@ export default function RepeatedMistakes({ games, username }: RepeatedMistakesPr
         }
       }
 
-      allMistakeIndices.forEach((idx) => {
+      playerMistakeIndices.forEach((idx: number) => {
         // idx is the index in the advantage array (after unshift).
         // Since we unshifted 0, idx 0 corresponds to the initial position.
         // If idx represents the move that was made, then the position BEFORE the move is fens[idx].
@@ -88,7 +90,7 @@ export default function RepeatedMistakes({ games, username }: RepeatedMistakesPr
           if (counts[fen]) {
             counts[fen].count += 1;
           } else {
-            counts[fen] = { count: 1, moves: moves.slice(0, idx), gameId: game.getGame().id, game };
+            counts[fen] = { count: 1, moves: moves.slice(0, idx), gameId: game.id, game: gameDecorator };
           }
         }
       });
