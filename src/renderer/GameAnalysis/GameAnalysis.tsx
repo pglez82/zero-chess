@@ -1,4 +1,4 @@
-import { FastForwardRounded, FastRewindRounded, SkipNextRounded, SkipPreviousRounded } from '@mui/icons-material';
+import { FastForwardRounded, FastRewindRounded, SwapHorizRounded, SkipNextRounded, SkipPreviousRounded } from '@mui/icons-material';
 import { Box, Button, Grid, IconButton, Paper, Stack } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AdviceSummary from './AdviceSummary/AdviceSummary';
@@ -34,6 +34,7 @@ export default function GameAnalysis() {
     position || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
   );
   const [currentIndex, setCurrentIndex] = useState(startingIndex);
+  const [isBoardFlipped, setIsBoardFlipped] = useState(false);
   const { analysis } = game.getGame();
   const navigate = useNavigate();
 
@@ -72,6 +73,10 @@ export default function GameAnalysis() {
     navigate('/games');
   };
 
+  const handleFlipBoard = () => {
+    setIsBoardFlipped(!isBoardFlipped);
+  };
+
   return (
     <Box>
       <Paper sx={{ padding: '2.5em 3.5em', maxWidth: '57em' }}>
@@ -81,7 +86,7 @@ export default function GameAnalysis() {
               boardWidth={500}
               position={boardPosition}
               arePiecesDraggable={false}
-              boardOrientation={game.getSide(username)}
+              boardOrientation={isBoardFlipped ? game.getOpponentSide(username) : game.getSide(username)}
               customBoardStyle={{ borderRadius: '5px' }}
             />
           </Grid>
@@ -110,6 +115,9 @@ export default function GameAnalysis() {
                 </IconButton>
                 <IconButton onClick={handleTop}>
                   <FastForwardRounded />
+                </IconButton>
+                <IconButton onClick={handleFlipBoard}>
+                  <SwapHorizRounded />
                 </IconButton>
               </Stack>
               <AdviceSummary game={game} />
