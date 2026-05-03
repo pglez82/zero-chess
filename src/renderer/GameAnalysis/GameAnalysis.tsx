@@ -90,6 +90,7 @@ export default function GameAnalysis() {
               moves={moves}
               currentIndex={currentIndex}
               advantage={analysis!.advantage}
+              onMoveClick={replayMoves}
             />
           </Grid>
           <Grid item xs={7}>

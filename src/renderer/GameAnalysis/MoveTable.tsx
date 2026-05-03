@@ -1,17 +1,31 @@
-import { TableRow, TableCell, Table, TableBody, Box } from '@mui/material';
-import { useEffect, useRef } from 'react';
+import { TableRow, TableCell, Table, TableBody, Box, SxProps, Theme, styled } from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
+
+// Styled components for clickable move cells
+const ClickableTableCell = styled(TableCell)(
+  ({ theme }) => ({
+    cursor: 'pointer',
+    transition: 'background-color 0.15s ease-in-out',
+    '&:hover': {
+      backgroundColor: theme.palette.action.hover,
+    },
+  }),
+);
 
 export default function MoveTable({
   moves,
   advantage,
   currentIndex,
+  onMoveClick,
 }: {
   moves: string[];
   advantage: number[];
   currentIndex: number;
+  onMoveClick?: (moveIndex: number) => void;
 }) {
   const tableRows = [];
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   function scrollTo(cellIndex: number) {
     rowRefs.current[cellIndex]?.scrollIntoView({
@@ -48,14 +62,38 @@ export default function MoveTable({
     }
   }
 
-  function getCellStyle(index: number) {
-    return {
-      color: currentIndex === index ? 'black' : 'inherit',
-      backgroundColor: currentIndex === index ? 'primary.main' : 'inherit',
-    };
+  function getCellStyle(moveIndex: number, isCurrent: boolean): SxProps<Theme> {
+    const isHovered = hoveredIndex === moveIndex;
+    return isCurrent
+      ? {
+          color: 'black',
+          backgroundColor: 'primary.main',
+        }
+      : {
+          backgroundColor: isHovered
+            ? (theme: Theme) => theme.palette.action.hover
+            : 'inherit',
+        };
+  }
+
+  function handleMoveClick(index: number) {
+    if (onMoveClick) {
+      onMoveClick(index);
+    }
+  }
+
+  function handleMoveMouseEnter(index: number) {
+    setHoveredIndex(index);
+  }
+
+  function handleMoveMouseLeave() {
+    setHoveredIndex(null);
   }
 
   for (let i = 0; i < moves.length; i += 2) {
+    const whiteMoveIndex = i;
+    const blackMoveIndex = i + 1;
+
     tableRows.push(
       <TableRow
         key={i}
@@ -64,16 +102,26 @@ export default function MoveTable({
         }}
       >
         <TableCell>{i / 2 + 1}</TableCell>
-        <TableCell sx={getCellStyle(i + 1)}>
+        <TableCell
+          sx={getCellStyle(whiteMoveIndex, currentIndex === whiteMoveIndex)}
+          onClick={() => handleMoveClick(whiteMoveIndex)}
+          onMouseEnter={() => handleMoveMouseEnter(whiteMoveIndex)}
+          onMouseLeave={handleMoveMouseLeave}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span>{moves[i]}</span>
-            <span>{formatAdvantage(advantage[i])}</span>
+            <span>{moves[whiteMoveIndex]}</span>
+            <span>{formatAdvantage(advantage[whiteMoveIndex])}</span>
           </div>
         </TableCell>
-        <TableCell sx={getCellStyle(i + 2)}>
+        <TableCell
+          sx={getCellStyle(blackMoveIndex, currentIndex === blackMoveIndex)}
+          onClick={() => handleMoveClick(blackMoveIndex)}
+          onMouseEnter={() => handleMoveMouseEnter(blackMoveIndex)}
+          onMouseLeave={handleMoveMouseLeave}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span>{moves[i + 1] || ''}</span>
-            <span>{formatAdvantage(advantage[i + 1])}</span>
+            <span>{moves[blackMoveIndex] || ''}</span>
+            <span>{formatAdvantage(advantage[blackMoveIndex])}</span>
           </div>
         </TableCell>
       </TableRow>,
