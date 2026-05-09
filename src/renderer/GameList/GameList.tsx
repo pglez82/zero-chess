@@ -18,20 +18,22 @@ async function analyzeGameWithWorker(
   game: GameDecorator,
 ): Promise<{ 
   centipawns: (number | string)[]; 
+  scores: Array<{ type: 'cp'; value: number } | { type: 'mate'; value: number }>;
+  bestLines: string[];
   accuracy: { whitePlayerAverage: number; blackPlayerAverage: number };
   advantage: (string | number)[];
   moves: string[];
 }> {
   const moves = game.getGameMoves();
   
-  // Get centipawns for each move using the specific engine worker
-  const centipawns = await getGameCentipawnsOnEngine(engine, moves);
+  // Get centipawns, scores, and best lines for each move using the specific engine worker
+  const { centipawns, scores, bestLines } = await getGameCentipawnsOnEngine(engine, moves);
   
   // Calculate accuracy and advantage from centipawns
   const accuracy = calculateAccuracyFromCentipawns(centipawns);
   const advantage = calculateAdvantageFromCentipawns(centipawns);
   
-  return { centipawns, accuracy, advantage, moves };
+  return { centipawns, scores, bestLines, accuracy, advantage, moves };
 }
 
 export default function GameList({
@@ -206,7 +208,7 @@ export default function GameList({
 
         try {
           // Analyze game using this specific engine worker
-          const { centipawns, accuracy, advantage } = await analyzeGameWithWorker(
+          const { centipawns, scores, bestLines, accuracy, advantage } = await analyzeGameWithWorker(
             engine,
             game,
           );
@@ -216,7 +218,7 @@ export default function GameList({
           const inaccuracies = calculateErrors(advantage, 0.5, 1);
           const blunders = calculateErrors(advantage, 1.5, Infinity);
 
-          const analysis = { advantage, accuracy, mistakes, inaccuracies, blunders };
+          const analysis = { advantage, accuracy, mistakes, inaccuracies, blunders, scores, bestLines };
 
           // Store analysis on the game object
           game.setAnalysis(analysis);

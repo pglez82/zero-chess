@@ -9,6 +9,30 @@ import MoveTable from './MoveTable';
 import { Chess } from 'chess.js';
 import { useMemo, useState } from 'react';
 
+function formatScore(score: { type: 'cp'; value: number } | { type: 'mate'; value: number }): string {
+  if (score.type === 'cp') {
+    const pawns = (score.value / 100).toFixed(2);
+    return score.value >= 0 ? `+${pawns}` : pawns;
+  }
+  // Mate
+  const sign = score.value > 0 ? '+' : '-';
+  return `${sign}M${Math.abs(score.value)}`;
+}
+
+function formatBestLine(bestLine: string, moveNumber: number): string {
+  const movesArr = bestLine.split(/\s+/);
+  let formatted = '';
+  for (let i = 0; i < movesArr.length; i += 2) {
+    const num = moveNumber + Math.floor(i / 2) + 1;
+    formatted += `${num}. ${movesArr[i]}`;
+    if (i + 1 < movesArr.length) {
+      formatted += ` ${movesArr[i + 1]}`;
+    }
+    formatted += ' ';
+  }
+  return formatted.trim();
+}
+
 export default function GameAnalysis() {
   const { username, game, position } = useLocation().state as {
     game: GameDecorator;
@@ -89,6 +113,36 @@ export default function GameAnalysis() {
               boardOrientation={isBoardFlipped ? game.getOpponentSide(username) : game.getSide(username)}
               customBoardStyle={{ borderRadius: '5px' }}
             />
+            {analysis && analysis.bestLines && analysis.scores && currentIndex < moves.length && (
+              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box
+                  sx={{
+                    fontFamily: 'monospace',
+                    fontSize: '0.95rem',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                    px: 1,
+                    borderRadius: 1,
+                    backgroundColor: analysis.scores[currentIndex]?.type === 'cp'
+                      ? (analysis.scores[currentIndex]!.value >= 0 ? '#c8e6c9' : '#ffcdd2')
+                      : '#fff9c4',
+                  }}
+                >
+                  {formatScore(analysis.scores[currentIndex]!)}
+                </Box>
+                <Box
+                  sx={{
+                    fontFamily: 'monospace',
+                    fontSize: '0.85rem',
+                    whiteSpace: 'nowrap',
+                    overflow: 'auto',
+                    maxWidth: '100%',
+                  }}
+                >
+                  {formatBestLine(analysis.bestLines[currentIndex]!, currentIndex)}
+                </Box>
+              </Box>
+            )}
           </Grid>
           <Grid item xs={5}>
             <MoveTable
