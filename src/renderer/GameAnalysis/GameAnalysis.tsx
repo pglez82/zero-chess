@@ -150,6 +150,9 @@ export default function GameAnalysis() {
               currentIndex={currentIndex}
               advantage={analysis!.advantage}
               onMoveClick={replayMoves}
+              inaccuracies={analysis?.inaccuracies}
+              mistakes={analysis?.mistakes}
+              blunders={analysis?.blunders}
             />
           </Grid>
           <Grid item xs={7}>

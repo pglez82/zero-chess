@@ -1,5 +1,6 @@
 import { TableRow, TableCell, Table, TableBody, Box, SxProps, Theme, styled } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
+import { ERROR_COLORS } from './errorColors';
 
 // Styled components for clickable move cells
 const ClickableTableCell = styled(TableCell)(
@@ -17,11 +18,17 @@ export default function MoveTable({
   advantage,
   currentIndex,
   onMoveClick,
+  inaccuracies,
+  mistakes,
+  blunders,
 }: {
   moves: string[];
   advantage: number[];
   currentIndex: number;
   onMoveClick?: (moveIndex: number) => void;
+  inaccuracies?: { whitePlayer: number[]; blackPlayer: number[] };
+  mistakes?: { whitePlayer: number[]; blackPlayer: number[] };
+  blunders?: { whitePlayer: number[]; blackPlayer: number[] };
 }) {
   const tableRows = [];
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
@@ -62,8 +69,27 @@ export default function MoveTable({
     }
   }
 
+  function getMoveErrorColor(moveIndex: number): string | undefined {
+    const isWhiteMove = moveIndex % 2 === 0;
+    const side = isWhiteMove ? 'whitePlayer' : 'blackPlayer';
+
+    if (blunders?.[side]?.includes(moveIndex)) return ERROR_COLORS.blunders;
+    if (mistakes?.[side]?.includes(moveIndex)) return ERROR_COLORS.mistakes;
+    if (inaccuracies?.[side]?.includes(moveIndex)) return ERROR_COLORS.inaccuracies;
+    return undefined;
+  }
+
   function getCellStyle(moveIndex: number, isCurrent: boolean): SxProps<Theme> {
     const isHovered = hoveredIndex === moveIndex;
+    const errorColor = getMoveErrorColor(moveIndex);
+
+    if (errorColor) {
+      return {
+        color: 'black',
+        backgroundColor: errorColor,
+      };
+    }
+
     return isCurrent
       ? {
           color: 'black',

@@ -12,14 +12,15 @@
   text-align: center;
 }
 
+/* Color constants - also defined in errorColors.ts for use in MoveTable */
 .inaccuracies {
-  color: #a4d7f4;
+  color: #a4d7f4; /* inaccuracies */
 }
 
 .mistakes {
-  color: #ffc852;
+  color: #ffc852; /* mistakes */
 }
 
 .blunders {
-  color: #e79c9c;
+  color: #e79c9c; /* blunders */
 }
