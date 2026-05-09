@@ -37,11 +37,21 @@ export default function RepeatedMistakes({ games, username }: RepeatedMistakesPr
       const analysis = game.analysis;
       if (!analysis) return;
 
-      const mistakes = analysis.mistakes as { whitePlayer?: any; blackPlayer?: any };
+      const errors = {
+        mistakes: analysis.mistakes as { whitePlayer?: any; blackPlayer?: any },
+        blunders: analysis.blunders as { whitePlayer?: any; blackPlayer?: any },
+      };
       const playerSide = gameDecorator.getSide(username);
-      const playerMistakeIndices = Array.isArray(mistakes[`${playerSide}Player`])
-        ? mistakes[`${playerSide}Player`]
-        : [];
+
+      // Collect all error indices from mistakes and blunders
+      const allErrorIndices = new Set<number>();
+      for (const errorType of Object.values(errors)) {
+        const indices = errorType[`${playerSide}Player`];
+        if (Array.isArray(indices)) {
+          indices.forEach((idx: number) => allErrorIndices.add(idx));
+        }
+      }
+      const playerMistakeIndices = Array.from(allErrorIndices).sort((a, b) => a - b);
 
       const chess = new Chess();
       const moves = gameDecorator.getGameMoves();
