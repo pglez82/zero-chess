@@ -36,6 +36,9 @@ Object.defineProperty(window, 'electron', {
   value: {
     ipcRenderer: {
       updateGameAnalysis: jest.fn(),
+      getPlayerGamesCount: jest.fn().mockResolvedValue(0),
+      getAnalyzedGamesCount: jest.fn().mockResolvedValue(0),
+      joinPath: jest.fn().mockResolvedValue(''),
     },
   },
 });

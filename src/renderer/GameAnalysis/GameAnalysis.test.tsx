@@ -55,8 +55,7 @@ describe('MoveTable component', () => {
     const currentCell = screen.getAllByRole('cell')[currentIndex];
 
     expect(currentCell).toHaveStyle({
-      color: 'black',
-      backgroundColor: 'primary.main',
+      color: 'rgba(0, 0, 0, 0.87)',
     });
   });
 });

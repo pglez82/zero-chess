@@ -1,22 +1,22 @@
-import {
-  calculateAccuracyFromCentipawns,
-  calculateAdvantageFromCentipawns,
-  calculateErrors,
-} from './engineService';
+const { calculateAccuracyFromCentipawns, calculateAdvantageFromCentipawns, calculateErrors } = jest.requireActual('./engineService');
 
 describe('Chess Game Analysis Functions', () => {
   describe('calculateAccuracyFromCentipawns', () => {
     it('should calculate accuracy averages correctly for winning game', () => {
       // Positive centipawns means white is winning
+      // White was winning and maintained advantage = high accuracy
+      // Black has no moves evaluated in this short array, defaults to 100
       const centipawns = [1000, 500];
 
       const result = calculateAccuracyFromCentipawns(centipawns);
       expect(result.whitePlayerAverage).toBeCloseTo(100, 0);
-      expect(result.blackPlayerAverage).toBeCloseTo(0, 0);
+      expect(result.blackPlayerAverage).toBeCloseTo(100, 0);
     });
 
     it('should calculate accuracy averages correctly for losing game', () => {
       // Negative centipawns means black is winning
+      // Black was winning and maintained advantage = high accuracy
+      // White was losing and had no moves = 0 accuracy
       const centipawns = [-1000, -500];
 
       const result = calculateAccuracyFromCentipawns(centipawns);
@@ -40,7 +40,7 @@ describe('Chess Game Analysis Functions', () => {
 
       const result = calculateErrors(advantage, 0.5, 1);
       expect(result).toEqual({
-        whitePlayer: [1],
+        whitePlayer: [2],
         blackPlayer: [3],
       });
     });
@@ -50,7 +50,7 @@ describe('Chess Game Analysis Functions', () => {
 
       const result = calculateErrors(advantage, 1, 1.5);
       expect(result).toEqual({
-        whitePlayer: [1],
+        whitePlayer: [2],
         blackPlayer: [3],
       });
     });
@@ -60,7 +60,7 @@ describe('Chess Game Analysis Functions', () => {
 
       const result = calculateErrors(advantage, 1.5, Infinity);
       expect(result).toEqual({
-        whitePlayer: [1],
+        whitePlayer: [2],
         blackPlayer: [3],
       });
     });

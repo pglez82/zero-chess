@@ -48,9 +48,9 @@ describe('GameStatistics component', () => {
           new GameDecorator(
             generateGame({
               analysis: {
-                blunders: { whitePlayer: 1, blackPlayer: 1 },
-                mistakes: { whitePlayer: 1, blackPlayer: 1 },
-                inaccuracies: { whitePlayer: 1, blackPlayer: 1 },
+                blunders: { whitePlayer: ['a'], blackPlayer: ['b'] },
+                mistakes: { whitePlayer: ['a'], blackPlayer: ['b'] },
+                inaccuracies: { whitePlayer: ['a'], blackPlayer: ['b'] },
               },
             }),
           ),

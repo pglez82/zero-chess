@@ -10,4 +10,16 @@ jest.mock('react-router', () => ({
   useNavigate: () => useNavigateMock,
 }));
 
+jest.mock('main/services/engine/helpers/engine', () => ({
+  createEnginePool: jest.fn(),
+  getGameCentipawnsOnEngine: jest.fn(),
+}));
+
+jest.mock('main/services/engine/engineService', () => ({
+  parseAdvantage: jest.fn(),
+  calculateAccuracyFromCentipawns: jest.fn(),
+  calculateAdvantageFromCentipawns: jest.fn(),
+  calculateErrors: jest.fn(),
+}));
+
 export default useNavigateMock;
