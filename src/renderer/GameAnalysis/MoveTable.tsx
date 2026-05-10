@@ -93,7 +93,7 @@ export default function MoveTable({
     return isCurrent
       ? {
           color: 'black',
-          backgroundColor: 'primary.main',
+          border: '2px solid white',
         }
       : {
           backgroundColor: isHovered
