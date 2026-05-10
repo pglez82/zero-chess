@@ -75,10 +75,15 @@ export function handleGameStream(
   username: string,
   totalGames: number,
   updateProgress: (progress: number) => void,
+  since?: number,
 ): Promise<Game[]> {
-  const stream = fetch(`https://lichess.org/api/games/user/${username}`, {
-    headers: { Accept: 'application/x-ndjson' },
-  });
+  const params = since ? `?since=${since}` : '';
+  const stream = fetch(
+    `https://lichess.org/api/games/user/${username}${params}`,
+    {
+      headers: { Accept: 'application/x-ndjson' },
+    },
+  );
 
   return new Promise((resolve, reject) => {
     const games: Game[] = [];

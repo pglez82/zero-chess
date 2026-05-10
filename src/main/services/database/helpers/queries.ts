@@ -10,8 +10,14 @@ export const COUNT_ANALYZED_GAMES_BY_USER_ID = `
   SELECT COUNT(*) as count FROM game WHERE (black_user_id = @id OR white_user_id = @id) AND analysis IS NOT NULL
 `;
 
-export const INSERT_GAME = `
-  INSERT INTO game (
+export const SELECT_NEWEST_GAME_CREATED_AT_BY_USER_ID = `
+  SELECT MAX(createdAt) as createdAt FROM game WHERE black_user_id = @id OR white_user_id = @id
+`;
+
+
+
+export const INSERT_GAME_OR_IGNORE = `
+  INSERT OR IGNORE INTO game (
     id, initial, increment, totalTime, perf, speed, moves,
     source, rated, status, winner, variant, createdAt, lastMoveAt,
     black_aiLevel, black_rating, black_ratingDiff, black_user_id, black_user_name,

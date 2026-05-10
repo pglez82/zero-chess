@@ -16,6 +16,7 @@ Object.defineProperty(window, 'electron', {
       insertGames: jest.fn(),
       getPlayerGamesCount: jest.fn(() => 1),
       getPlayerGames: jest.fn(() => [generateGame()]),
+      getNewestGameCreatedAt: jest.fn(() => null),
     },
   },
 });

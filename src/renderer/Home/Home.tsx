@@ -50,8 +50,8 @@ export default function Home({
     }
   }
 
-  function retrieveNewGames(totalGames: number) {
-    handleGameStream(username, totalGames, setProgress)
+  function retrieveNewGames(totalGames: number, since?: number) {
+    handleGameStream(username, totalGames, setProgress, since)
       .then((games) => {
         window.electron.ipcRenderer.insertGames(games);
         showUserGames(games.map((game) => new GameDecorator(game)));
@@ -75,8 +75,18 @@ export default function Home({
     const gamesCountDB =
       await window.electron.ipcRenderer.getPlayerGamesCount(username);
     if (gamesCount !== gamesCountDB) {
-      setDownloading(true);
-      retrieveNewGames(gamesCount);
+      // Count differs — check if we can do a delta fetch
+      const newestLocalCreatedAt =
+        await window.electron.ipcRenderer.getNewestGameCreatedAt(username);
+      if (newestLocalCreatedAt) {
+        // Has local games — fetch only games newer than the newest local one
+        setDownloading(true);
+        retrieveNewGames(gamesCount, newestLocalCreatedAt + 1);
+      } else {
+        // No local games yet — download all
+        setDownloading(true);
+        retrieveNewGames(gamesCount);
+      }
     } else {
       await retrieveOldGames();
     }
