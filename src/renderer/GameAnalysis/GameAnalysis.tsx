@@ -1,5 +1,5 @@
-import { FastForwardRounded, FastRewindRounded, SwapHorizRounded, SkipNextRounded, SkipPreviousRounded } from '@mui/icons-material';
-import { Box, Button, Grid, IconButton, Paper, Stack } from '@mui/material';
+import { FastForwardRounded, FastRewindRounded, OpenInNewRounded, SwapHorizRounded, SkipNextRounded, SkipPreviousRounded } from '@mui/icons-material';
+import { Box, Button, Grid, IconButton, Paper, Stack, Tooltip } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AdviceSummary from './AdviceSummary/AdviceSummary';
 import { GameDecorator } from '../../interfaces';
@@ -17,6 +17,16 @@ function formatScore(score: { type: 'cp'; value: number } | { type: 'mate'; valu
   // Mate
   const sign = score.value > 0 ? '+' : '-';
   return `${sign}M${Math.abs(score.value)}`;
+}
+
+function fenToLichessUrl(fen: string): string {
+  // FEN format: pieces activeColor castling noCastling halfMove fullMove
+  const parts = fen.split(' ');
+  if (parts.length < 6) {
+    return `https://lichess.org/analysis/${encodeURIComponent(fen)}_${parts[1] || 'w'}_KQkq_-_0_1`;
+  }
+  const [, activeColor, castling = 'KQkq', halfMove, fullMove] = parts;
+  return `https://lichess.org/analysis/${fen}_${activeColor}_${castling}_-${halfMove}_${fullMove}`;
 }
 
 function formatBestLine(bestLine: string, moveNumber: number): string {
@@ -101,6 +111,11 @@ export default function GameAnalysis() {
     setIsBoardFlipped(!isBoardFlipped);
   };
 
+  const handleOpenLichess = () => {
+    const url = fenToLichessUrl(boardPosition);
+    window.open(url, '_blank');
+  };
+
   return (
     <Box>
       <Paper sx={{ padding: '2.5em 3.5em', maxWidth: '57em' }}>
@@ -160,6 +175,11 @@ export default function GameAnalysis() {
           </Grid>
           <Grid item xs={5}>
             <Stack sx={{ height: '100%' }} justifyContent="space-between">
+              <Tooltip title="Open position in Lichess">
+                <IconButton onClick={handleOpenLichess}>
+                  <OpenInNewRounded />
+                </IconButton>
+              </Tooltip>
               <Stack direction="row" justifyContent="space-evenly">
                 <IconButton onClick={handleBottom}>
                   <FastRewindRounded />
