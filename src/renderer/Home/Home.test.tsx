@@ -140,6 +140,13 @@ describe('Home component', () => {
     const handleGameStreamMock = jest.spyOn(http, 'handleGameStream');
     handleGameStreamMock.mockResolvedValueOnce(gamesResponse);
 
+    // Mock getPlayerGames to return invalid games (simulating empty DB after insert)
+    const getPlayerGamesMock = window.electron.ipcRenderer.getPlayerGames as jest.Mock;
+    getPlayerGamesMock.mockResolvedValueOnce([
+      generateGame({ moves: '' }),
+      generateGame({ variant: 'fromPosition' }),
+    ]);
+
     await act(async () => {
       fireEvent.change(usernameInput, { target: { value: 'testUser' } });
       fireEvent.click(importButton);

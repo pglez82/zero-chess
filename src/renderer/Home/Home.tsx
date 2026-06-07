@@ -50,17 +50,17 @@ export default function Home({
     }
   }
 
-  function retrieveNewGames(totalGames: number, since?: number) {
-    handleGameStream(username, totalGames, setProgress, since)
-      .then((games) => {
-        window.electron.ipcRenderer.insertGames(games);
-        showUserGames(games.map((game) => new GameDecorator(game)));
+  async function retrieveNewGames(totalGames: number, since?: number) {
+    try {
+      const games = await handleGameStream(username, totalGames, setProgress, since);
+      window.electron.ipcRenderer.insertGames(games);
 
-        return games;
-      })
-      .catch(() =>
-        showHomeError(true, 'Hubo un error al cargar las partidas.'),
-      );
+      // After inserting, load from database to preserve any analysis data
+      const gamesWithAnalysis = await window.electron.ipcRenderer.getPlayerGames(username);
+      showUserGames(gamesWithAnalysis.map((game) => new GameDecorator(game)));
+    } catch (_e) {
+      showHomeError(true, 'Hubo un error al cargar las partidas.');
+    }
   }
 
   async function retrieveOldGames() {
@@ -81,11 +81,11 @@ export default function Home({
       if (newestLocalCreatedAt) {
         // Has local games — fetch only games newer than the newest local one
         setDownloading(true);
-        retrieveNewGames(gamesCount, newestLocalCreatedAt + 1);
+        await retrieveNewGames(gamesCount, newestLocalCreatedAt + 1);
       } else {
         // No local games yet — download all
         setDownloading(true);
-        retrieveNewGames(gamesCount);
+        await retrieveNewGames(gamesCount);
       }
     } else {
       await retrieveOldGames();
@@ -99,7 +99,7 @@ export default function Home({
       const { exists, gamesCount } = await checkPlayer(username);
       if (exists) {
         if (gamesCount !== 0) {
-          checkForNewGames(gamesCount);
+          await checkForNewGames(gamesCount);
         } else {
           showHomeError(true, 'El usuario no ha jugado partidas.');
         }
