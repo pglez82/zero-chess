@@ -134,21 +134,6 @@ function findBestMoveUci(
   return null;
 }
 
-/**
- * Compare the user's move with the best move.
- * Returns true if they match.
- */
-function compareMoves(
-  currentFen: string,
-  playedUci: string,
-  bestMoveSan: string,
-): boolean {
-  const bestUci = findBestMoveUci(currentFen, bestMoveSan);
-  if (!bestUci) return false;
-
-  // Normalize both to lowercase for comparison
-  return playedUci.toLowerCase() === bestUci.toLowerCase();
-}
 
 export default function PositionTrainer({
   games,
@@ -293,9 +278,9 @@ export default function PositionTrainer({
 
       // Compare using UCI notation from both the played move and the best move
       const playedUci = move.from + move.to + (move.promotion || '');
-      const isCorrect = compareMoves(boardPosition, playedUci, correctMove);
+      const isCorrect = correctMove == playedUci;
 
-      const displayedMove = move.san || sourceSquare + targetSquare;
+      const displayedMove = sourceSquare + targetSquare;
 
       setBoardPosition(chess.fen());
       setGameState((prev) => ({
