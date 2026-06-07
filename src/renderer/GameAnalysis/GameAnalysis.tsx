@@ -154,7 +154,7 @@ export default function GameAnalysis() {
                     maxWidth: '100%',
                   }}
                 >
-                  {formatBestLine(analysis.bestLines[currentIndex]!, currentIndex)}
+                  {formatBestLine(analysis.bestLines[currentIndex]!, Math.floor(currentIndex / 2))}
                 </Box>
               </Box>
             )}
