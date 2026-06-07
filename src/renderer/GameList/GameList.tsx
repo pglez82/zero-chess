@@ -4,7 +4,7 @@ import { createEnginePool, getGameCentipawnsOnEngine } from '../../main/services
 import { Paper, List, Button, Stack, Pagination, Box, TextField, IconButton } from '@mui/material';
 import LinearProgressWithLabel from '../Home/LinearProgressWithLabel';
 import { ChangeEvent, useState, useEffect, useRef } from 'react';
-import { Troubleshoot } from '@mui/icons-material';
+import { Troubleshoot, SportsEsports } from '@mui/icons-material';
 import { GameDecorator } from '../../interfaces';
 import { useNavigate } from 'react-router-dom';
 import GameTile from './GameTile';
@@ -293,6 +293,10 @@ export default function GameList({
     navigate('/statistics');
   };
 
+  const handleTrainer = () => {
+    navigate('/trainer');
+  };
+
   return (
     <Box>
       {loading ? (
@@ -316,6 +320,9 @@ export default function GameList({
               <IconButton aria-label="statistics" onClick={handleStatistics}>
                 <Troubleshoot />
               </IconButton>
+              <Button variant="contained" startIcon={<SportsEsports />} onClick={handleTrainer}>
+                Entrenar posiciones
+              </Button>
               <Button variant="contained" onClick={handleToggleAll}>
                 Seleccionar todas
               </Button>

@@ -2,6 +2,7 @@ import { Button, Paper, Stack, Box } from '@mui/material';
 import { Game, GameDecorator } from '../../interfaces';
 import Carousel from 'react-material-ui-carousel';
 import { useNavigate } from 'react-router-dom';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import StatsPieChart from './StatsPieChart';
 import StatsBarChart from './StatsBarChart';
 import RepeatedMistakes from './RepeatedMistakes';
@@ -136,6 +137,10 @@ export default function GameStatistics({
   const navigate = useNavigate();
   const handleBack = () => {
     navigate('/games');
+  };
+
+  const handleTrainer = () => {
+    navigate('/trainer');
   };
 
   const hasErrors = stats.blunders + stats.mistakes + stats.inaccuracies > 0;
@@ -274,6 +279,17 @@ export default function GameStatistics({
             )}
           </Box>
         </Carousel>
+        <Box className="flex-end" sx={{ mb: 2 }}>
+          <Button
+            variant="contained"
+            startIcon={<SportsEsportsIcon />}
+            onClick={handleTrainer}
+            size="large"
+            sx={{ fontSize: '1rem', px: 3, py: 1 }}
+          >
+            📚 Entrenador de Posiciones
+          </Button>
+        </Box>
         <RepeatedMistakes games={games} username={username} />
         <Box className="flex-end">
           <Button color="secondary" variant="contained" onClick={handleBack}>

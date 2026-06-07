@@ -1,0 +1,5 @@
+.flex-end {
+  display: flex;
+  margin-top: 1.5em;
+  justify-content: flex-end;
+}

@@ -6,6 +6,7 @@ import { GameDecorator } from '../interfaces';
 import GameList from './GameList/GameList';
 import { useState } from 'react';
 import Home from './Home/Home';
+import PositionTrainer from './PositionTrainer/PositionTrainer';
 import './App.css';
 
 const darkTheme = createTheme({
@@ -65,6 +66,10 @@ export default function App() {
           <Route
             path="/statistics"
             element={<GameStatistics games={games} username={username} />}
+          />
+          <Route
+            path="/trainer"
+            element={<PositionTrainer games={games} username={username} />}
           />
         </Routes>
       </Router>

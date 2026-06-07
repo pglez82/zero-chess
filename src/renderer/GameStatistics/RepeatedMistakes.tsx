@@ -10,8 +10,10 @@ import {
   Typography, 
   Paper, 
   Divider,
-  Box
+  Box,
+  Button
 } from '@mui/material';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 
 interface RepeatedMistakesProps {
   games: GameDecorator[];
@@ -118,21 +120,23 @@ export default function RepeatedMistakes({ games, username }: RepeatedMistakesPr
       .sort((a, b) => b.count - a.count);
   }, [games]);
 
-  if (repeatedPositions.length === 0) {
-    return (
-      <Paper sx={{ padding: 2, mt: 2 }}>
-        <Typography variant="body1">No se han encontrado errores repetidos.</Typography>
-      </Paper>
-    );
-  }
-
   return (
     <Paper sx={{ padding: 2, mt: 2 }}>
-      <Typography variant="h6" gutterBottom>
-        Posiciones con errores repetidos
-      </Typography>
-      <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
-        <List>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+        <Typography variant="h6">Posiciones con errores repetidos</Typography>
+        <Button
+          variant="contained"
+          startIcon={<SportsEsportsIcon />}
+          onClick={() => navigate('/trainer')}
+          disabled={repeatedPositions.length === 0}
+          size="small"
+        >
+          Entrenar posiciones
+        </Button>
+      </Box>
+      {repeatedPositions.length > 0 && (
+        <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
+          <List>
           {repeatedPositions.map((pos, index) => (
             <React.Fragment key={index}>
               <ListItemButton
@@ -166,7 +170,11 @@ export default function RepeatedMistakes({ games, username }: RepeatedMistakesPr
             </React.Fragment>
           ))}
         </List>
-      </Box>
+        </Box>
+      )}
+      {repeatedPositions.length === 0 && (
+        <Typography variant="body1">No se han encontrado errores repetidos.</Typography>
+      )}
     </Paper>
   );
 }
