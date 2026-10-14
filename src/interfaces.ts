@@ -16,6 +16,22 @@ export interface Player {
   };
 }
 
+export interface AnalysisScore {
+  type: 'cp' | 'mate';
+  value: number;
+}
+
+export interface GameAnalysis {
+  advantage?: any;
+  accuracy?: any;
+  mistakes?: any;
+  inaccuracies?: any;
+  blunders?: any;
+  scores?: AnalysisScore[];
+  bestLines?: any;
+  [key: string]: any;
+}
+
 export interface Game {
   id: string;
   perf: string;
@@ -33,7 +49,7 @@ export interface Game {
     black: Player;
     white: Player;
   };
-  analysis?: { [key: string]: any };
+  analysis?: GameAnalysis;
 }
 
 export interface Engine {
@@ -49,6 +65,117 @@ export interface Engine {
     cb?: (response: string) => void,
     stream?: (response: string) => void,
   ) => void;
+}
+
+function invertUciMove(move: string): string {
+  const match = move.match(/^([a-h])([1-8])([a-h])([1-8])([qrbnQRBN])?$/);
+  if (match) {
+    const fromFile = match[1];
+    const fromRank = 8 - parseInt(match[2], 10) + 1;
+    const toFile = match[3];
+    const toRank = 8 - parseInt(match[4], 10) + 1;
+    const promotion = match[5] || '';
+    return `${fromFile}${fromRank}${toFile}${toRank}${promotion}`;
+  }
+  return move;
+}
+
+export function formatBestLine(
+  bestLine: string,
+  fenOrMoveNumber?: string | number,
+): string {
+  if (!bestLine || !bestLine.trim()) {
+    return '';
+  }
+
+  let chess: Chess | undefined;
+  if (typeof fenOrMoveNumber === 'string' && fenOrMoveNumber.includes('/')) {
+    try {
+      chess = new Chess(fenOrMoveNumber);
+    } catch {
+      chess = undefined;
+    }
+  }
+
+  let movesArr = bestLine
+    .trim()
+    .split(/\s+/)
+    .filter((m) => !/^\d+\.+$/.test(m));
+
+  // Fallback when no valid FEN position was provided
+  if (!chess) {
+    const startMove = typeof fenOrMoveNumber === 'number' ? fenOrMoveNumber : 1;
+    const formatted: string[] = [];
+    for (let i = 0; i < movesArr.length; i += 2) {
+      const num = startMove + Math.floor(i / 2);
+      formatted.push(
+        `${num}. ${movesArr[i]}${movesArr[i + 1] ? ` ${movesArr[i + 1]}` : ''}`,
+      );
+    }
+    return formatted.join(' ');
+  }
+
+  // Handle potential legacy inverted moves from earlier engine bug
+  if (movesArr.length > 0) {
+    let firstMoveValid = false;
+    try {
+      const test = chess.move(movesArr[0]);
+      if (test) {
+        firstMoveValid = true;
+        chess.undo();
+      }
+    } catch {
+      firstMoveValid = false;
+    }
+
+    if (!firstMoveValid) {
+      try {
+        const testInverted = chess.move(invertUciMove(movesArr[0]));
+        if (testInverted) {
+          chess.undo();
+          movesArr = movesArr.map(invertUciMove);
+        }
+      } catch {
+        // Keep original movesArr
+      }
+    }
+  }
+
+  const formattedParts: string[] = [];
+  for (let i = 0; i < movesArr.length; i += 1) {
+    const uci = movesArr[i];
+    const turn = chess.turn();
+    const moveNum = chess.moveNumber();
+
+    let moveObj = null;
+    try {
+      moveObj = chess.move(uci);
+    } catch {
+      try {
+        const from = uci.slice(0, 2);
+        const to = uci.slice(2, 4);
+        const promotion = uci.slice(4) || undefined;
+        moveObj = chess.move({ from, to, promotion });
+      } catch {
+        moveObj = null;
+      }
+    }
+
+    if (!moveObj) {
+      formattedParts.push(uci);
+      break;
+    }
+
+    if (turn === 'w') {
+      formattedParts.push(`${moveNum}. ${moveObj.san}`);
+    } else if (i === 0) {
+      formattedParts.push(`${moveNum}... ${moveObj.san}`);
+    } else {
+      formattedParts.push(moveObj.san);
+    }
+  }
+
+  return formattedParts.join(' ');
 }
 
 export class GameDecorator {
@@ -180,7 +307,28 @@ export class GameDecorator {
     return chess.fen();
   }
 
-  setAnalysis(analysis: { [key: string]: any }) {
+  parsePositionAt(moveIndex: number): string {
+    const chess = new Chess();
+    const moves = this.getGameMoves();
+    for (let i = 0; i <= moveIndex && i < moves.length; i += 1) {
+      try {
+        chess.move(moves[i]);
+      } catch (e) {
+        break;
+      }
+    }
+    return chess.fen();
+  }
+
+  parseBestLine(bestLine: string, fenOrMoveIndex?: string | number): string {
+    if (typeof fenOrMoveIndex === 'number') {
+      const fen = this.parsePositionAt(fenOrMoveIndex);
+      return formatBestLine(bestLine, fen);
+    }
+    return formatBestLine(bestLine, fenOrMoveIndex || this.parsePosition());
+  }
+
+  setAnalysis(analysis: GameAnalysis) {
     this.game.analysis = analysis;
   }
 }

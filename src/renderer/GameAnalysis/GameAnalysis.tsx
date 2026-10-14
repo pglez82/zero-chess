@@ -2,7 +2,7 @@ import { FastForwardRounded, FastRewindRounded, OpenInNewRounded, SwapHorizRound
 import { Box, Button, Grid, IconButton, Paper, Stack, Tooltip } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AdviceSummary from './AdviceSummary/AdviceSummary';
-import { GameDecorator } from '../../interfaces';
+import { GameDecorator, formatBestLine } from '../../interfaces';
 import { Chessboard } from 'react-chessboard';
 import AdvantageChart from './AdvantageChart';
 import MoveTable from './MoveTable';
@@ -29,20 +29,6 @@ function fenToLichessUrl(fen: string): string {
   return `https://lichess.org/analysis/${fen}_${activeColor}_${castling}_-${halfMove}_${fullMove}`;
 }
 
-function formatBestLine(bestLine: string, moveNumber: number): string {
-  const movesArr = bestLine.split(/\s+/);
-  let formatted = '';
-  for (let i = 0; i < movesArr.length; i += 2) {
-    const num = moveNumber + Math.floor(i / 2) + 1;
-    formatted += `${num}. ${movesArr[i]}`;
-    if (i + 1 < movesArr.length) {
-      formatted += ` ${movesArr[i + 1]}`;
-    }
-    formatted += ' ';
-  }
-  return formatted.trim();
-}
-
 export default function GameAnalysis() {
   const { username, game, position } = useLocation().state as {
     game: GameDecorator;
@@ -64,9 +50,21 @@ export default function GameAnalysis() {
     return 0;
   }, [moves, position]);
 
-  const [boardPosition, setBoardPosition] = useState(
-    position || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR',
-  );
+  const initialPosition = useMemo(() => {
+    if (position) return position;
+    if (moves.length > 0) {
+      const chess = new Chess();
+      try {
+        chess.move(moves[0]);
+        return chess.fen();
+      } catch {
+        return 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+      }
+    }
+    return 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+  }, [moves, position]);
+
+  const [boardPosition, setBoardPosition] = useState(initialPosition);
   const [currentIndex, setCurrentIndex] = useState(startingIndex);
   const [isBoardFlipped, setIsBoardFlipped] = useState(false);
   const { analysis } = game.getGame();
@@ -154,7 +152,9 @@ export default function GameAnalysis() {
                     maxWidth: '100%',
                   }}
                 >
-                  {formatBestLine(analysis.bestLines[currentIndex]!, Math.floor(currentIndex / 2))}
+                  {game?.parseBestLine
+                    ? game.parseBestLine(analysis.bestLines[currentIndex]!, boardPosition)
+                    : formatBestLine(analysis.bestLines[currentIndex]!, boardPosition)}
                 </Box>
               </Box>
             )}

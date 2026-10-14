@@ -134,35 +134,6 @@ function invertScore(score: { type: 'cp'; value: number } | { type: 'mate'; valu
   }
 }
 
-function invertPv(pv: string, isWhiteToMoveAfter: boolean): string {
-  const moves = pv.split(/\s+/);
-  if (!isWhiteToMoveAfter) {
-    // Black just moved, so PV starts with white's response
-    // Invert the perspective: swap sides of each move
-    return moves.map((move) => invertMove(move)).join(' ');
-  }
-  return pv;
-}
-
-function invertMove(move: string): string {
-  // Convert a move from black's perspective to white's (and vice versa)
-  // Board flip: a-h stays the same, 1<->8 (i.e., 8 - rank + 1)
-  const fromRegex = /^([a-h])([1-8])([a-h])([1-8])([qrbnQRBN])?$/;
-  const match = move.match(fromRegex);
-  if (match) {
-    const fromFile = match[1];
-    const fromRank = 8 - parseInt(match[2], 10) + 1;
-    const toFile = match[3];
-    const toRank = 8 - parseInt(match[4], 10) + 1;
-    const promotion = match[5] || '';
-    return `${fromFile}${fromRank}${toFile}${toRank}${promotion}`;
-  }
-  // Handle special moves like O-O, O-O-O
-  if (move === 'O-O' || move === 'o-o') return 'O-O';
-  if (move === 'O-O-O' || move === 'o-o-o') return 'O-O-O';
-  return move;
-}
-
 function getCentipawns(invert: boolean, nodes: number = 10000) {
   if (!engine) {
     throw new Error('Engine not initialized');
@@ -175,17 +146,12 @@ function getCentipawns(invert: boolean, nodes: number = 10000) {
       `go nodes ${nodes}`,
       function onDone() {
         let score = latestScore;
-        let line = bestLine;
 
         if (score && invert) {
           score = invertScore(score);
         }
 
-        if (invert) {
-          line = invertPv(bestLine, false);
-        }
-
-        resolve({ score: score || { type: 'cp', value: 0 }, bestLine: line });
+        resolve({ score: score || { type: 'cp', value: 0 }, bestLine });
       },
       function onStream(data) {
         const score = parseEngineScore(data);
@@ -215,17 +181,12 @@ function getCentipawnsOnEngine(
       `go nodes ${nodes}`,
       function onDone() {
         let score = latestScore;
-        let line = bestLine;
 
         if (score && invert) {
           score = invertScore(score);
         }
 
-        if (invert) {
-          line = invertPv(bestLine, false);
-        }
-
-        resolve({ score: score || { type: 'cp', value: 0 }, bestLine: line });
+        resolve({ score: score || { type: 'cp', value: 0 }, bestLine });
       },
       function onStream(data) {
         const score = parseEngineScore(data);
