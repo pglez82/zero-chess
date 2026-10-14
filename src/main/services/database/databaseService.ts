@@ -37,6 +37,24 @@ export function connectDatabase(customPath?: string) {
   db.exec(CREATE_MISTAKE_POSITION_TABLE);
   db.exec(CREATE_GAME_MISTAKES_PROCESSED_TABLE);
 
+  try {
+    const tableInfo = db
+      .prepare("PRAGMA table_info('mistake_position')")
+      .all() as Array<{ name: string }>;
+    const hasErrorMagnitude = tableInfo.some(
+      (col) => col.name === 'error_magnitude',
+    );
+    if (!hasErrorMagnitude) {
+      db.exec(
+        'ALTER TABLE mistake_position ADD COLUMN error_magnitude REAL DEFAULT 0',
+      );
+      db.exec('DELETE FROM game_mistakes_processed');
+      db.exec('DELETE FROM mistake_position');
+    }
+  } catch {
+    // Ignore migration error
+  }
+
   return db;
 }
 
@@ -163,6 +181,7 @@ export function getRepeatedMistakes(userId: string): RepeatedMistakePosition[] {
   return rows.map((row) => ({
     fen: row.fen,
     count: row.count,
+    errorMagnitude: row.errorMagnitude ?? 0,
     side: row.side as 'white' | 'black',
     bestMove: row.bestMove || '',
     moves: JSON.parse(row.moves || '[]'),

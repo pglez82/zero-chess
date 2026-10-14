@@ -172,3 +172,40 @@ export function createFullAnalysis(
 
   return { accuracy, advantage, mistakes, inaccuracies, blunders };
 }
+
+/**
+ * Calculate the magnitude of an error (eval loss in pawns) for a specific move.
+ * @param advantage - Array of advantage values
+ * @param moveIndex - Move index (0-based)
+ * @param side - Optional player side ('white' | 'black'). If not specified, inferred from moveIndex (even=white, odd=black)
+ * @param movesCount - Optional total move count to disambiguate whether advantage array includes starting position
+ * @returns Error magnitude (positive number representing pawn advantage lost)
+ */
+export function calculateMoveErrorMagnitude(
+  advantage: (string | number)[] | undefined,
+  moveIndex: number,
+  side?: 'white' | 'black',
+  movesCount?: number,
+): number {
+  if (!advantage || !Array.isArray(advantage) || advantage.length === 0) {
+    return 0;
+  }
+
+  const parsed = parseAdvantage(advantage);
+
+  if (movesCount !== undefined && parsed.length === movesCount + 1) {
+    // Starting position already at index 0
+  } else {
+    parsed.unshift(0);
+  }
+
+  if (moveIndex < 0 || moveIndex >= parsed.length - 1) {
+    return 0;
+  }
+
+  const isWhite = side ? side === 'white' : moveIndex % 2 === 0;
+  const difference = parsed[moveIndex] - parsed[moveIndex + 1];
+  const loss = isWhite ? difference : -difference;
+
+  return Math.max(0, Number(loss.toFixed(2)));
+}

@@ -81,6 +81,7 @@ jest.mock('better-sqlite3', () => {
                 move_index: params.moveIndex,
                 moves: params.moves,
                 best_move: params.bestMove,
+                error_magnitude: params.errorMagnitude,
               });
             },
           };
@@ -132,9 +133,15 @@ jest.mock('better-sqlite3', () => {
               const results: any[] = [];
               for (const [fen, list] of groups.entries()) {
                 if (list.length >= 2) {
+                  const avgMagnitude =
+                    list.reduce(
+                      (sum, item) => sum + (item.error_magnitude || 0),
+                      0,
+                    ) / list.length;
                   results.push({
                     fen,
                     count: list.length,
+                    errorMagnitude: Math.round(avgMagnitude * 100) / 100,
                     side: list[0].side,
                     bestMove: list[0].best_move,
                     moves: list[0].moves,
@@ -229,6 +236,7 @@ describe('databaseService mistake positions & repeated mistakes', () => {
     const repeated = getRepeatedMistakes('testplayer');
     expect(repeated).toHaveLength(1);
     expect(repeated[0].count).toBe(2);
+    expect(repeated[0].errorMagnitude).toBe(1.4);
     expect(repeated[0].side).toBe('white');
     expect(repeated[0].moves).toEqual(['e4', 'e5']);
     expect(repeated[0].fen).toBe(

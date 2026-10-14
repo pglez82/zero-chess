@@ -1,4 +1,9 @@
-const { calculateAccuracyFromCentipawns, calculateAdvantageFromCentipawns, calculateErrors } = jest.requireActual('./engineService');
+const {
+  calculateAccuracyFromCentipawns,
+  calculateAdvantageFromCentipawns,
+  calculateErrors,
+  calculateMoveErrorMagnitude,
+} = jest.requireActual('./engineService');
 
 describe('Chess Game Analysis Functions', () => {
   describe('calculateAccuracyFromCentipawns', () => {
@@ -65,4 +70,36 @@ describe('Chess Game Analysis Functions', () => {
       });
     });
   });
+
+  describe('calculateMoveErrorMagnitude', () => {
+    it('should calculate white move error magnitude correctly', () => {
+      // Moves: 0: e4, 1: e5, 2: Nf3 (White blunder)
+      // Advantage after moves: 0.2, 0.2, -1.8
+      const advantage = [0.2, 0.2, -1.8];
+      const magnitude = calculateMoveErrorMagnitude(advantage, 2, 'white', 3);
+      // parsed: [0, 0.2, 0.2, -1.8], index 2 is 0.2, index 3 is -1.8 -> diff = 0.2 - (-1.8) = 2.0
+      expect(magnitude).toBe(2);
+    });
+
+    it('should calculate black move error magnitude correctly', () => {
+      // Moves: 0: e4, 1: e5 (Black blunder)
+      // Advantage after moves: 0.2, 2.5
+      const advantage = [0.2, 2.5];
+      const magnitude = calculateMoveErrorMagnitude(advantage, 1, 'black', 2);
+      // parsed: [0, 0.2, 2.5], index 1 is 0.2, index 2 is 2.5 -> diff for black = 2.5 - 0.2 = 2.3
+      expect(magnitude).toBe(2.3);
+    });
+
+    it('should return 0 when advantage improved', () => {
+      const advantage = [0.2, 1.5];
+      const magnitude = calculateMoveErrorMagnitude(advantage, 0, 'white', 2);
+      expect(magnitude).toBe(0);
+    });
+
+    it('should handle undefined or empty advantage', () => {
+      expect(calculateMoveErrorMagnitude(undefined, 0)).toBe(0);
+      expect(calculateMoveErrorMagnitude([], 0)).toBe(0);
+    });
+  });
 });
+

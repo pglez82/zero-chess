@@ -59,12 +59,14 @@ describe('mistakes helper', () => {
       expect(whiteMistake?.fen).toBe(
         'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
       );
+      expect(whiteMistake?.errorMagnitude).toBe(1.0);
       expect(JSON.parse(whiteMistake!.moves)).toEqual([]);
 
       const blackMistake = results.find((r) => r.side === 'black');
       expect(blackMistake).toBeDefined();
       expect(blackMistake?.userId).toBe('playerblack');
       expect(blackMistake?.moveIndex).toBe(1);
+      expect(blackMistake?.errorMagnitude).toBe(1.0);
       expect(blackMistake?.fen).toBe(
         'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1',
       );

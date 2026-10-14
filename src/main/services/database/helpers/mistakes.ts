@@ -1,4 +1,5 @@
 import { Chess } from 'chess.js';
+import { calculateMoveErrorMagnitude } from '../../engine/engineService';
 
 export interface RawMistakePosition {
   gameId: string;
@@ -8,6 +9,7 @@ export interface RawMistakePosition {
   moveIndex: number;
   moves: string;
   bestMove: string;
+  errorMagnitude: number;
 }
 
 export function getBestMoveFromBestLines(
@@ -110,6 +112,21 @@ export function extractMistakePositionsForGame(game: {
         getBestMoveFromBestLines(analysis.bestLines, idx, gameMoves) || '';
       const movesLeadingToPosition = gameMoves.slice(0, idx);
 
+      let errorMagnitude = calculateMoveErrorMagnitude(
+        analysis.advantage,
+        idx,
+        player.side,
+        gameMoves.length,
+      );
+
+      if (errorMagnitude === 0) {
+        if (blunders?.includes(idx)) {
+          errorMagnitude = 1.5;
+        } else if (mistakes?.includes(idx)) {
+          errorMagnitude = 1.0;
+        }
+      }
+
       results.push({
         gameId: game.id,
         userId: player.userId.toLowerCase(),
@@ -118,6 +135,7 @@ export function extractMistakePositionsForGame(game: {
         moveIndex: idx,
         moves: JSON.stringify(movesLeadingToPosition),
         bestMove,
+        errorMagnitude,
       });
     }
   }

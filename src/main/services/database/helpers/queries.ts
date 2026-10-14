@@ -73,6 +73,7 @@ export const CREATE_MISTAKE_POSITION_TABLE = `
     move_index INTEGER NOT NULL,
     moves TEXT NOT NULL,
     best_move TEXT,
+    error_magnitude REAL DEFAULT 0,
     FOREIGN KEY (game_id) REFERENCES game(id) ON DELETE CASCADE
   );
   CREATE INDEX IF NOT EXISTS idx_mistake_user_fen ON mistake_position (user_id, fen);
@@ -87,9 +88,9 @@ export const CREATE_GAME_MISTAKES_PROCESSED_TABLE = `
 
 export const INSERT_MISTAKE_POSITION = `
   INSERT INTO mistake_position (
-    game_id, user_id, side, fen, move_index, moves, best_move
+    game_id, user_id, side, fen, move_index, moves, best_move, error_magnitude
   ) VALUES (
-    @gameId, @userId, @side, @fen, @moveIndex, @moves, @bestMove
+    @gameId, @userId, @side, @fen, @moveIndex, @moves, @bestMove, @errorMagnitude
   )
 `;
 
@@ -114,6 +115,7 @@ export const SELECT_REPEATED_MISTAKES_BY_USER_ID = `
   SELECT
     fen,
     COUNT(*) as count,
+    ROUND(AVG(error_magnitude), 2) as errorMagnitude,
     side,
     best_move as bestMove,
     moves,
@@ -122,6 +124,6 @@ export const SELECT_REPEATED_MISTAKES_BY_USER_ID = `
   WHERE LOWER(user_id) = LOWER(@userId)
   GROUP BY fen
   HAVING count >= 2
-  ORDER BY count DESC
+  ORDER BY count DESC, errorMagnitude DESC
 `;
 

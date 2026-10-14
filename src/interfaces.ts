@@ -39,6 +39,7 @@ export interface RepeatedMistakePosition {
   bestMove: string;
   side: 'white' | 'black';
   gameId: string;
+  errorMagnitude?: number;
 }
 
 export interface Game {

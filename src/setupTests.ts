@@ -15,11 +15,16 @@ jest.mock('main/services/engine/helpers/engine', () => ({
   getGameCentipawnsOnEngine: jest.fn(),
 }));
 
-jest.mock('main/services/engine/engineService', () => ({
-  parseAdvantage: jest.fn(),
-  calculateAccuracyFromCentipawns: jest.fn(),
-  calculateAdvantageFromCentipawns: jest.fn(),
-  calculateErrors: jest.fn(),
-}));
+jest.mock('main/services/engine/engineService', () => {
+  const actual = jest.requireActual('./main/services/engine/engineService');
+  return {
+    ...actual,
+    parseAdvantage: jest.fn(actual.parseAdvantage),
+    calculateAccuracyFromCentipawns: jest.fn(actual.calculateAccuracyFromCentipawns),
+    calculateAdvantageFromCentipawns: jest.fn(actual.calculateAdvantageFromCentipawns),
+    calculateErrors: jest.fn(actual.calculateErrors),
+    calculateMoveErrorMagnitude: jest.fn(actual.calculateMoveErrorMagnitude),
+  };
+});
 
 export default useNavigateMock;
