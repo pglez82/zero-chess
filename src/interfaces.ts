@@ -32,6 +32,15 @@ export interface GameAnalysis {
   [key: string]: any;
 }
 
+export interface RepeatedMistakePosition {
+  fen: string;
+  count: number;
+  moves: string[];
+  bestMove: string;
+  side: 'white' | 'black';
+  gameId: string;
+}
+
 export interface Game {
   id: string;
   perf: string;

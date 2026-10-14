@@ -39,6 +39,7 @@ Object.defineProperty(window, 'electron', {
       getPlayerGamesCount: jest.fn().mockResolvedValue(0),
       getAnalyzedGamesCount: jest.fn().mockResolvedValue(0),
       joinPath: jest.fn().mockResolvedValue(''),
+      getRepeatedMistakes: jest.fn().mockResolvedValue([]),
     },
   },
 });

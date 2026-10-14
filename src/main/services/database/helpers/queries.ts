@@ -62,3 +62,66 @@ export const CREATE_GAME_TABLE = `
     white_user_name TEXT
   , analysis TEXT)
 `;
+
+export const CREATE_MISTAKE_POSITION_TABLE = `
+  CREATE TABLE IF NOT EXISTS mistake_position (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    side TEXT NOT NULL,
+    fen TEXT NOT NULL,
+    move_index INTEGER NOT NULL,
+    moves TEXT NOT NULL,
+    best_move TEXT,
+    FOREIGN KEY (game_id) REFERENCES game(id) ON DELETE CASCADE
+  );
+  CREATE INDEX IF NOT EXISTS idx_mistake_user_fen ON mistake_position (user_id, fen);
+  CREATE INDEX IF NOT EXISTS idx_mistake_game ON mistake_position (game_id);
+`;
+
+export const CREATE_GAME_MISTAKES_PROCESSED_TABLE = `
+  CREATE TABLE IF NOT EXISTS game_mistakes_processed (
+    game_id TEXT PRIMARY KEY
+  );
+`;
+
+export const INSERT_MISTAKE_POSITION = `
+  INSERT INTO mistake_position (
+    game_id, user_id, side, fen, move_index, moves, best_move
+  ) VALUES (
+    @gameId, @userId, @side, @fen, @moveIndex, @moves, @bestMove
+  )
+`;
+
+export const DELETE_MISTAKES_BY_GAME_ID = `
+  DELETE FROM mistake_position WHERE game_id = @gameId
+`;
+
+export const MARK_GAME_MISTAKES_PROCESSED = `
+  INSERT OR REPLACE INTO game_mistakes_processed (game_id) VALUES (@gameId)
+`;
+
+export const SELECT_UNPROCESSED_ANALYZED_GAMES_BY_USER_ID = `
+  SELECT id, moves, white_user_id, white_user_name, black_user_id, black_user_name, analysis
+  FROM game
+  WHERE (LOWER(white_user_id) = LOWER(@userId) OR LOWER(white_user_name) = LOWER(@userId)
+         OR LOWER(black_user_id) = LOWER(@userId) OR LOWER(black_user_name) = LOWER(@userId))
+    AND analysis IS NOT NULL
+    AND id NOT IN (SELECT game_id FROM game_mistakes_processed)
+`;
+
+export const SELECT_REPEATED_MISTAKES_BY_USER_ID = `
+  SELECT
+    fen,
+    COUNT(*) as count,
+    side,
+    best_move as bestMove,
+    moves,
+    game_id as gameId
+  FROM mistake_position
+  WHERE LOWER(user_id) = LOWER(@userId)
+  GROUP BY fen
+  HAVING count >= 2
+  ORDER BY count DESC
+`;
+

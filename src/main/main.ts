@@ -15,6 +15,7 @@ import {
   insertGames,
   updateGameAnalysis,
   getNewestGameCreatedAt,
+  getRepeatedMistakes,
 } from './services/database/databaseService';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { resolveHtmlPath } from './util';
@@ -141,6 +142,9 @@ app
     });
     ipcMain.handle('database:updateGameAnalysis', async (_, id, analysis) => {
       return updateGameAnalysis(id, analysis);
+    });
+    ipcMain.handle('database:getRepeatedMistakes', async (_, id) => {
+      return getRepeatedMistakes(id);
     });
 
     createWindow();

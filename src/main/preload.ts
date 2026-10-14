@@ -1,7 +1,7 @@
 // Disable no-unused-vars, broken for spread args
 /* eslint no-unused-vars: off */
 import { contextBridge, ipcRenderer } from 'electron';
-import { Game } from '../interfaces';
+import { Game, RepeatedMistakePosition } from '../interfaces';
 
 const electronHandler = {
   ipcRenderer: {
@@ -24,6 +24,10 @@ const electronHandler = {
       analysis: { [key: string]: any },
     ): Promise<void> =>
       ipcRenderer.invoke('database:updateGameAnalysis', id, analysis),
+    getRepeatedMistakes: (
+      id: string,
+    ): Promise<RepeatedMistakePosition[]> =>
+      ipcRenderer.invoke('database:getRepeatedMistakes', id),
   },
 };
 

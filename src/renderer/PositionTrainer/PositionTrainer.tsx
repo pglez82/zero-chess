@@ -1,8 +1,8 @@
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
-import { GameDecorator } from '../../interfaces';
+import { GameDecorator, RepeatedMistakePosition } from '../../interfaces';
 import { useNavigate } from 'react-router-dom';
-import { useMemo, useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -135,105 +135,106 @@ function findBestMoveUci(
 }
 
 
+function computePositionsFromGames(
+  games: GameDecorator[],
+  username: string,
+): MistakePosition[] {
+  const counts: {
+    [key: string]: {
+      count: number;
+      moves: string[];
+      bestMove: string;
+      game: GameDecorator;
+      side: 'white' | 'black';
+    };
+  } = {};
+
+  games.forEach((gameDecorator) => {
+    const game = gameDecorator.getGame();
+    const analysis = game.analysis;
+    if (!analysis) return;
+
+    const errors = {
+      mistakes: analysis.mistakes as { whitePlayer?: number[]; blackPlayer?: number[] },
+      blunders: analysis.blunders as { whitePlayer?: number[]; blackPlayer?: number[] },
+    };
+    const playerSide = gameDecorator.getSide(username);
+
+    // Collect all error indices from mistakes and blunders
+    const allErrorIndices = new Set<number>();
+    for (const errorType of Object.values(errors)) {
+      const indices = errorType[`${playerSide}Player`];
+      if (Array.isArray(indices)) {
+        indices.forEach((idx: number) => allErrorIndices.add(idx));
+      }
+    }
+    const playerMistakeIndices = Array.from(allErrorIndices).sort((a, b) => a - b);
+
+    const chess = new Chess();
+    const gameMoves = gameDecorator.getGameMoves();
+
+    const fens: string[] = [chess.fen()];
+    for (const move of gameMoves) {
+      try {
+        chess.move(move);
+        fens.push(chess.fen());
+      } catch (e) {
+        break;
+      }
+    }
+
+    playerMistakeIndices.forEach((idx: number) => {
+      const fen = fens[idx];
+      if (fen) {
+        const side = fen.split(' ')[1] === 'w' ? 'white' : 'black';
+        const bestMove =
+          getBestMoveFromBestLines(analysis.bestLines, idx, gameMoves) || '';
+
+        if (counts[fen]) {
+          counts[fen].count += 1;
+        } else {
+          counts[fen] = {
+            count: 1,
+            moves: gameMoves.slice(0, idx),
+            bestMove,
+            game: gameDecorator,
+            side,
+          };
+        }
+      }
+    });
+  });
+
+  return Object.entries(counts)
+    .filter(([_, value]) => value.count >= 2)
+    .map(([fen, value]) => ({
+      fen,
+      count: value.count,
+      moves: value.moves,
+      bestMove: value.bestMove,
+      game: value.game,
+      side: value.side,
+    }))
+    .sort((a, b) => b.count - a.count);
+}
+
 export default function PositionTrainer({
   games,
   username,
 }: PositionTrainerProps) {
   const navigate = useNavigate();
 
-  const positions = useMemo<MistakePosition[]>(() => {
-    const counts: {
-      [key: string]: {
-        count: number;
-        moves: string[];
-        bestMove: string;
-        game: GameDecorator;
-        side: 'white' | 'black';
-      };
-    } = {};
+  const hasIpc =
+    typeof window !== 'undefined' &&
+    !!window.electron?.ipcRenderer?.getRepeatedMistakes;
 
-    games.forEach((gameDecorator) => {
-      const game = gameDecorator.getGame();
-      const analysis = game.analysis;
-      if (!analysis) return;
-
-      const errors = {
-        mistakes: analysis.mistakes as { whitePlayer?: number[]; blackPlayer?: number[] },
-        blunders: analysis.blunders as { whitePlayer?: number[]; blackPlayer?: number[] },
-      };
-      const playerSide = gameDecorator.getSide(username);
-
-      // Collect all error indices from mistakes and blunders
-      const allErrorIndices = new Set<number>();
-      for (const errorType of Object.values(errors)) {
-        const indices = errorType[`${playerSide}Player`];
-        if (Array.isArray(indices)) {
-          indices.forEach((idx: number) => allErrorIndices.add(idx));
-        }
-      }
-      const playerMistakeIndices = Array.from(allErrorIndices).sort((a, b) => a - b);
-
-      const chess = new Chess();
-      const gameMoves = gameDecorator.getGameMoves();
-
-      const fens: string[] = [chess.fen()];
-      for (const move of gameMoves) {
-        try {
-          chess.move(move);
-          fens.push(chess.fen());
-        } catch (e) {
-          break;
-        }
-      }
-
-      playerMistakeIndices.forEach((idx: number) => {
-        const fen = fens[idx];
-        if (fen) {
-          // Determine the side to move at this position
-          const chessAtPosition = new Chess();
-          for (let i = 0; i < idx && i < gameMoves.length; i++) {
-            try {
-              chessAtPosition.move(gameMoves[i]);
-            } catch (e) {
-              break;
-            }
-          }
-          const side = chessAtPosition.turn() === 'w' ? 'white' : 'black';
-
-          // Get the best move from the analysis
-          const bestMove = getBestMoveFromBestLines(
-            analysis.bestLines,
-            idx,
-            gameMoves,
-          ) || '';
-
-          if (counts[fen]) {
-            counts[fen].count += 1;
-          } else {
-            counts[fen] = {
-              count: 1,
-              moves: gameMoves.slice(0, idx),
-              bestMove,
-              game: gameDecorator,
-              side,
-            };
-          }
-        }
-      });
-    });
-
-    return Object.entries(counts)
-      .filter(([_, value]) => value.count >= 2)
-      .map(([fen, value]) => ({
-        fen,
-        count: value.count,
-        moves: value.moves,
-        bestMove: value.bestMove,
-        game: value.game,
-        side: value.side,
-      }))
-      .sort((a, b) => b.count - a.count);
-  }, [games, username]);
+  const [loading, setLoading] = useState(hasIpc);
+  const [positions, setPositions] = useState<MistakePosition[]>(() => {
+    if (!hasIpc) {
+      return computePositionsFromGames(games, username);
+    }
+    return [];
+  });
 
   const [gameState, setGameState] = useState<GameState>(() => ({
     positions,
@@ -246,10 +247,66 @@ export default function PositionTrainer({
   }));
 
   const [boardPosition, setBoardPosition] = useState<string>(() => {
-    return positions.length > 0 ? positions[0].fen : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+    return positions.length > 0
+      ? positions[0].fen
+      : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
   });
 
   const [showFinishedDialog, setShowFinishedDialog] = useState(false);
+
+  useEffect(() => {
+    if (!hasIpc) return;
+
+    let isMounted = true;
+    window.electron.ipcRenderer
+      .getRepeatedMistakes(username)
+      .then((dbPositions: RepeatedMistakePosition[]) => {
+        if (!isMounted) return;
+        const mappedPositions: MistakePosition[] = dbPositions.map((pos) => ({
+          ...pos,
+          game: games.find((g) => g.getGame().id === pos.gameId) || games[0],
+        }));
+
+        setPositions(mappedPositions);
+        setGameState({
+          positions: mappedPositions,
+          currentIndex: 0,
+          score: { correct: 0, incorrect: 0 },
+          status: 'playing',
+          lastMoveMade: '',
+          lastMoveColor: null,
+          totalPositions: mappedPositions.length,
+        });
+        if (mappedPositions.length > 0) {
+          setBoardPosition(mappedPositions[0].fen);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Failed to load repeated mistakes from DB:', err);
+        if (isMounted) {
+          const fallback = computePositionsFromGames(games, username);
+          setPositions(fallback);
+          setGameState({
+            positions: fallback,
+            currentIndex: 0,
+            score: { correct: 0, incorrect: 0 },
+            status: 'playing',
+            lastMoveMade: '',
+            lastMoveColor: null,
+            totalPositions: fallback.length,
+          });
+          if (fallback.length > 0) {
+            setBoardPosition(fallback[0].fen);
+          }
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [username, games, hasIpc]);
 
   const handleDrop = useCallback(
     (sourceSquare: string, targetSquare: string): boolean => {
@@ -363,6 +420,19 @@ export default function PositionTrainer({
           gameState.totalPositions) *
         100
       : 0;
+
+  if (loading) {
+    return (
+      <Box>
+        <Paper sx={{ padding: '2.5em 3.5em' }}>
+          <Stack spacing={3}>
+            <Typography variant="h5">📚 Entrenador de Posiciones</Typography>
+            <LinearProgress />
+          </Stack>
+        </Paper>
+      </Box>
+    );
+  }
 
   if (positions.length === 0) {
     return (
