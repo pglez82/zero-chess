@@ -11,23 +11,34 @@ export default function StatsBarChart({
   values: number[];
 }) {
   return (
-    <Box>
-      <h3 className="h3-margin">{title}</h3>
+    <Box
+      className="box"
+      sx={{
+        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+        borderRadius: 2,
+        p: 1.5,
+        border: '1px solid rgba(255, 255, 255, 0.06)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        flex: 1,
+      }}
+    >
+      <h3 className="h3-margin" style={{ margin: '0 0 0.5rem 0', fontSize: '0.92rem', fontWeight: 600, color: '#e0e0e0' }}>
+        {title}
+      </h3>
       {keys.length > 0 ? (
-        <Box width={200}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <BarChart
-            width={250}
-            height={200}
-            series={[{ data: values }]}
+            width={200}
+            height={160}
+            series={[{ data: values, color: '#FFAE80' }]}
             xAxis={[{ scaleType: 'band', data: keys }]}
           />
         </Box>
       ) : (
-        <Box
-          className="centered-text"
-          sx={{ height: '12.5em', marginLeft: '3em' }}
-        >
-          <p>¡Juega más partidas!</p>
+        <Box className="centered-text" sx={{ height: '160px' }}>
+          <p style={{ margin: 0 }}>¡Juega más partidas!</p>
         </Box>
       )}
     </Box>

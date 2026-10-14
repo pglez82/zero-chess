@@ -1,4 +1,16 @@
-import { Button, TextField, Stack, Box, Paper, LinearProgress } from '@mui/material';
+import {
+  Button,
+  TextField,
+  Stack,
+  Box,
+  Paper,
+  LinearProgress,
+  InputAdornment,
+  Typography,
+} from '@mui/material';
+import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
+import CloudDownloadOutlinedIcon from '@mui/icons-material/CloudDownloadOutlined';
+import SportsEsportsRoundedIcon from '@mui/icons-material/SportsEsportsRounded';
 import LinearProgressWithLabel from './LinearProgressWithLabel';
 import { checkPlayer, handleGameStream } from '../../http';
 import { GameDecorator } from '../../interfaces';
@@ -123,38 +135,104 @@ export default function Home({
   };
 
   return (
-    <Box>
+    <Box className="home-container">
       {loading ? (
-        <Box sx={{ width: '25vw' }}>
-          {downloading ? (
-            <>
-              <p>Descargando partidas...</p>
-              <LinearProgressWithLabel progress={progress} />
-            </>
-          ) : (
-            <LinearProgress />
-          )}
-        </Box>
+        <Paper className="download-card">
+          <Stack spacing={3} alignItems="center">
+            <Box
+              sx={{
+                width: 54,
+                height: 54,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'rgba(144, 202, 249, 0.1)',
+                color: 'primary.main',
+              }}
+            >
+              <CloudDownloadOutlinedIcon sx={{ fontSize: 32 }} />
+            </Box>
+            {downloading ? (
+              <Box sx={{ width: '100%' }}>
+                <p style={{ margin: '0 0 1rem 0', fontWeight: 600, color: '#e0e0e0' }}>
+                  Descargando partidas...
+                </p>
+                <LinearProgressWithLabel progress={progress} />
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
+                  Descargando y sincronizando partidas desde Lichess
+                </Typography>
+              </Box>
+            ) : (
+              <Box sx={{ width: '100%' }}>
+                <Typography variant="body1" sx={{ mb: 2, fontWeight: 500 }}>
+                  Verificando jugador en Lichess...
+                </Typography>
+                <LinearProgress sx={{ borderRadius: 2, height: 6 }} />
+              </Box>
+            )}
+          </Stack>
+        </Paper>
       ) : (
-        <Paper sx={{ padding: '2.5em 3.5em' }}>
+        <Paper className="home-card">
+          <div className="home-brand">
+            <div className="home-logo-badge">
+              <SportsEsportsRoundedIcon sx={{ fontSize: 36 }} />
+            </div>
+            <h2 className="home-brand-title">ZeroChess</h2>
+            <p className="home-brand-subtitle">
+              Analizador de precisión y entrenador de aperturas con Stockfish
+            </p>
+          </div>
+
           <form onSubmit={handleSubmit}>
-            <Stack spacing={5}>
-              <h1>Importar partidas:</h1>
+            <Stack spacing={3}>
+              <h1 className="home-heading">Importar partidas:</h1>
               <TextField
                 required
-                size="small"
+                fullWidth
+                size="medium"
                 error={homeError}
                 label="Nombre de usuario"
+                placeholder="ej. magnuscarlsen"
                 helperText={homeHelperText}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <AccountCircleOutlinedIcon sx={{ color: 'text.secondary' }} />
+                    </InputAdornment>
+                  ),
+                }}
                 onChange={(e) =>
                   onUsernameUpdate(e.target.value.toLowerCase().trim())
                 }
               />
-              <Button variant="contained" type="submit">
+              <Button
+                variant="contained"
+                type="submit"
+                size="large"
+                startIcon={<CloudDownloadOutlinedIcon />}
+                sx={{
+                  py: 1.3,
+                  fontSize: '0.98rem',
+                  fontWeight: 600,
+                  background: 'linear-gradient(135deg, #90caf9 0%, #64b5f6 100%)',
+                  color: '#0f172a',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #bbdefb 0%, #90caf9 100%)',
+                  },
+                }}
+              >
                 Importar partidas
               </Button>
             </Stack>
           </form>
+
+          <div className="home-features">
+            <span className="home-feature-pill">⚡ Motor Stockfish</span>
+            <span className="home-feature-pill">🎯 Gráfica de ventaja</span>
+            <span className="home-feature-pill">📚 Entrenador de errores</span>
+          </div>
         </Paper>
       )}
     </Box>

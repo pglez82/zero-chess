@@ -1,17 +1,14 @@
-import { TableRow, TableCell, Table, TableBody, Box, SxProps, Theme, styled } from '@mui/material';
+import {
+  TableRow,
+  TableCell,
+  Table,
+  TableBody,
+  Box,
+  SxProps,
+  Theme,
+} from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import { ERROR_COLORS } from './errorColors';
-
-// Styled components for clickable move cells
-const ClickableTableCell = styled(TableCell)(
-  ({ theme }) => ({
-    cursor: 'pointer',
-    transition: 'background-color 0.15s ease-in-out',
-    '&:hover': {
-      backgroundColor: theme.palette.action.hover,
-    },
-  }),
-);
 
 export default function MoveTable({
   moves,
@@ -85,17 +82,25 @@ export default function MoveTable({
 
     if (errorColor) {
       return {
-        color: 'black',
+        color: '#1a1a1a',
         backgroundColor: errorColor,
+        fontWeight: 600,
+        cursor: 'pointer',
+        borderRadius: '4px',
       };
     }
 
     return isCurrent
       ? {
-          color: 'black',
-          border: '2px solid white',
+          backgroundColor: 'rgba(144, 202, 249, 0.22)',
+          border: '2px solid #90caf9',
+          borderRadius: '4px',
+          fontWeight: 700,
+          cursor: 'pointer',
         }
       : {
+          cursor: 'pointer',
+          borderRadius: '4px',
           backgroundColor: isHovered
             ? (theme: Theme) => theme.palette.action.hover
             : 'inherit',
@@ -126,28 +131,58 @@ export default function MoveTable({
         ref={(el) => {
           rowRefs.current[i + 1] = el;
         }}
+        sx={{
+          '&:nth-of-type(odd)': {
+            backgroundColor: 'rgba(255, 255, 255, 0.015)',
+          },
+        }}
       >
-        <TableCell>{i / 2 + 1}</TableCell>
         <TableCell
-          sx={getCellStyle(whiteMoveIndex, currentIndex === whiteMoveIndex)}
+          sx={{
+            py: 1,
+            px: 1.5,
+            width: '45px',
+            color: 'text.secondary',
+            fontSize: '0.8rem',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+          }}
+        >
+          {i / 2 + 1}
+        </TableCell>
+        <TableCell
+          sx={{
+            ...getCellStyle(whiteMoveIndex, currentIndex === whiteMoveIndex),
+            py: 1,
+            px: 1.5,
+            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+          }}
           onClick={() => handleMoveClick(whiteMoveIndex)}
           onMouseEnter={() => handleMoveMouseEnter(whiteMoveIndex)}
           onMouseLeave={handleMoveMouseLeave}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span>{moves[whiteMoveIndex]}</span>
-            <span>{formatAdvantage(advantage[whiteMoveIndex])}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontWeight: 600 }}>{moves[whiteMoveIndex]}</span>
+            <span style={{ fontSize: '0.78rem', opacity: 0.85 }}>
+              {formatAdvantage(advantage[whiteMoveIndex])}
+            </span>
           </div>
         </TableCell>
         <TableCell
-          sx={getCellStyle(blackMoveIndex, currentIndex === blackMoveIndex)}
+          sx={{
+            ...getCellStyle(blackMoveIndex, currentIndex === blackMoveIndex),
+            py: 1,
+            px: 1.5,
+            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+          }}
           onClick={() => handleMoveClick(blackMoveIndex)}
           onMouseEnter={() => handleMoveMouseEnter(blackMoveIndex)}
           onMouseLeave={handleMoveMouseLeave}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span>{moves[blackMoveIndex] || ''}</span>
-            <span>{formatAdvantage(advantage[blackMoveIndex])}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontWeight: 600 }}>{moves[blackMoveIndex] || ''}</span>
+            <span style={{ fontSize: '0.78rem', opacity: 0.85 }}>
+              {formatAdvantage(advantage[blackMoveIndex])}
+            </span>
           </div>
         </TableCell>
       </TableRow>,
@@ -155,8 +190,16 @@ export default function MoveTable({
   }
 
   return (
-    <Box sx={{ maxHeight: '31.15em', overflow: 'auto', border: 1 }}>
-      <Table>
+    <Box
+      sx={{
+        maxHeight: '31.15em',
+        overflow: 'auto',
+        borderRadius: 2,
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+      }}
+    >
+      <Table size="small" stickyHeader>
         <TableBody>{tableRows}</TableBody>
       </Table>
     </Box>

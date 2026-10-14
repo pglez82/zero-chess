@@ -1,10 +1,14 @@
 .h1-margin {
   margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ffffff;
 }
 
 .carousel {
-  width: 45em;
-  height: 20em;
+  width: 100%;
+  min-height: 22em;
+  margin: 1rem 0;
 }
 
 .box {
@@ -12,16 +16,22 @@
 }
 
 .h3-margin {
-  margin-left: 4.5em;
+  text-align: center;
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e0e0e0;
 }
 
 .paper {
-  padding: 2.5em 3.5em;
+  padding: 2.25rem 2.75rem;
+  max-width: 62em;
+  width: 100%;
 }
 
 .flex-end {
   display: flex;
-  margin-top: 2.5em;
+  margin-top: 1.5rem;
   justify-content: flex-end;
 }
 
@@ -30,4 +40,15 @@
   text-align: center;
   align-items: center;
   justify-content: center;
+  color: #888888;
+}
+
+.stats-slide-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 1.25rem 0;
+  color: #90caf9;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }

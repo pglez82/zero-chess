@@ -1,10 +1,40 @@
 /* eslint-disable no-await-in-loop */
-import { calculateAccuracyFromCentipawns, calculateAdvantageFromCentipawns, calculateErrors } from '../../main/services/engine/engineService';
-import { createEnginePool, getGameCentipawnsOnEngine } from '../../main/services/engine/helpers/engine';
-import { Paper, List, Button, Stack, Pagination, Box, TextField, IconButton } from '@mui/material';
+import {
+  calculateAccuracyFromCentipawns,
+  calculateAdvantageFromCentipawns,
+  calculateErrors,
+} from '../../main/services/engine/engineService';
+import {
+  createEnginePool,
+  getGameCentipawnsOnEngine,
+} from '../../main/services/engine/helpers/engine';
+import {
+  Paper,
+  List,
+  Button,
+  Stack,
+  Pagination,
+  Box,
+  TextField,
+  IconButton,
+  Chip,
+  Tooltip,
+  InputAdornment,
+  Typography,
+} from '@mui/material';
 import LinearProgressWithLabel from '../Home/LinearProgressWithLabel';
 import { ChangeEvent, useState, useEffect, useRef } from 'react';
-import { Troubleshoot, SportsEsports } from '@mui/icons-material';
+import {
+  Troubleshoot,
+  SportsEsports,
+  Search,
+  SelectAll,
+  Shuffle,
+  PlayArrow,
+  ArrowBack,
+  Person,
+  Clear,
+} from '@mui/icons-material';
 import { GameDecorator } from '../../interfaces';
 import { useNavigate } from 'react-router-dom';
 import GameTile from './GameTile';
@@ -111,7 +141,6 @@ export default function GameList({
     setAllChecked(false);
   };
 
-
   const handleToggle = (value: number) => {
     if (!games[value].getGame().analysis) {
       const currentIndex = checked.indexOf(value);
@@ -175,7 +204,6 @@ export default function GameList({
     setEstimatedTime(formattedTime);
   }
 
-  /* eslint-disable no-await-in-loop */
   async function analyseGames(gamesToAnalyse: GameDecorator[]) {
     const totalGames = gamesToAnalyse.length;
     
@@ -189,7 +217,6 @@ export default function GameList({
     
     // Create a pool of engine instances (one per CPU core)
     const engines = await createEnginePool(stockfishPath);
-    const numWorkers = engines.length;
 
     let totalTime = 0;
     let completedGames = 0;
@@ -198,7 +225,7 @@ export default function GameList({
     const workQueue = [...Array(totalGames).keys()];
 
     // Create worker tasks
-    const workerPromises = engines.map((engine, workerIndex) => async () => {
+    const workerPromises = engines.map((engine) => async () => {
       while (workQueue.length > 0) {
         const gameIndex = workQueue.shift();
         if (gameIndex === undefined) break;
@@ -208,7 +235,7 @@ export default function GameList({
 
         try {
           // Analyze game using this specific engine worker
-          const { centipawns, scores, bestLines, accuracy, advantage } = await analyzeGameWithWorker(
+          const { scores, bestLines, accuracy, advantage } = await analyzeGameWithWorker(
             engine,
             game,
           );
@@ -300,80 +327,250 @@ export default function GameList({
   return (
     <Box>
       {loading ? (
-        <Box sx={{ width: '25vw' }}>
-          <p>
-            Analizando...
-            {estimatedTime ? ` (Quedan ${estimatedTime})` : ''}
-          </p>
-          <LinearProgressWithLabel progress={progress} />
-        </Box>
+        <Paper className="download-card" sx={{ width: '28vw', minWidth: '320px', p: 4 }}>
+          <Stack spacing={2} alignItems="center">
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Analizando...
+              {estimatedTime ? ` (Quedan ${estimatedTime})` : ''}
+            </Typography>
+            <p style={{ display: 'none' }}>
+              Analizando...
+              {estimatedTime ? ` (Quedan ${estimatedTime})` : ''}
+            </p>
+            <Box sx={{ width: '100%', mt: 1 }}>
+              <LinearProgressWithLabel progress={progress} />
+            </Box>
+            <Typography variant="caption" color="text.secondary">
+              Calculando precisión, jugadas óptimas y errores con Stockfish
+            </Typography>
+          </Stack>
+        </Paper>
       ) : (
-        <Paper sx={{ padding: '2.5em 3.5em', minWidth: '48em' }}>
-          <Stack spacing={5}>
-            <TextField
-              size="small"
-              value={searchTerm}
-              label="Buscar por nombre del rival"
-              onChange={(e) => handleSearchTermChange(e.target.value)}
-            />
-            <Stack spacing={5} direction="row" alignItems="center">
-              <IconButton aria-label="statistics" onClick={handleStatistics}>
-                <Troubleshoot />
-              </IconButton>
-              <Button variant="contained" startIcon={<SportsEsports />} onClick={handleTrainer}>
-                Entrenar posiciones
-              </Button>
-              <Button variant="contained" onClick={handleToggleAll}>
-                Seleccionar todas
-              </Button>
+        <Paper className="game-list-paper">
+          <Stack spacing={3}>
+            {/* Header section with User Profile, Stats & Navigation Actions */}
+            <div className="game-list-header">
+              <div className="game-list-title">
+                <Person sx={{ color: 'primary.main', fontSize: 28 }} />
+                <span>Partidas de {username || 'Usuario'}</span>
+                {gamesCount > 0 && (
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    label={`${analyzedCount} / ${gamesCount} analizadas`}
+                    sx={{
+                      ml: 1,
+                      fontWeight: 600,
+                      borderColor: 'rgba(255,255,255,0.15)',
+                      backgroundColor: 'rgba(255,255,255,0.03)',
+                    }}
+                  />
+                )}
+              </div>
+
+              <Stack direction="row" spacing={1.5} alignItems="center">
+                <Tooltip title="Estadísticas de juego">
+                  <IconButton
+                    aria-label="statistics"
+                    onClick={handleStatistics}
+                    sx={{
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: '8px',
+                      p: '7px',
+                      '&:hover': { backgroundColor: 'rgba(144, 202, 249, 0.1)', borderColor: 'primary.main' },
+                    }}
+                  >
+                    <Troubleshoot sx={{ color: 'primary.main', fontSize: 20 }} />
+                  </IconButton>
+                </Tooltip>
+
+                <Button
+                  variant="contained"
+                  startIcon={<SportsEsports />}
+                  onClick={handleTrainer}
+                  sx={{
+                    backgroundColor: 'rgba(255, 174, 128, 0.15)',
+                    color: '#ffae80',
+                    border: '1px solid rgba(255, 174, 128, 0.3)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 174, 128, 0.25)',
+                    },
+                  }}
+                >
+                  Entrenar posiciones
+                </Button>
+              </Stack>
+            </div>
+
+            {/* Filter and Selection Tools */}
+            <Stack spacing={2}>
               <TextField
                 size="small"
-                type="number"
-                label="N"
-                value={randomCount}
-                onChange={(e) => setRandomCount(parseInt(e.target.value, 10) || 0)}
-                sx={{ width: '80px' }}
+                fullWidth
+                value={searchTerm}
+                label="Buscar por nombre del rival"
+                onChange={(e) => handleSearchTermChange(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search sx={{ color: 'text.secondary', fontSize: 20 }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: searchTerm ? (
+                    <InputAdornment position="end">
+                      <IconButton size="small" onClick={() => handleSearchTermChange('')}>
+                        <Clear fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  ) : null,
+                }}
               />
-              <Button variant="contained" onClick={handleRandomSelect}>
-                Random
-              </Button>
-              {gamesCount > 0 && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <span>{analyzedCount}</span>
-                  <span>/</span>
-                  <span>{gamesCount}</span>
+
+              <Stack
+                direction="row"
+                spacing={2}
+                alignItems="center"
+                justifyContent="space-between"
+                flexWrap="wrap"
+                gap={1}
+              >
+                <Stack direction="row" spacing={1.5} alignItems="center">
+                  <Button
+                    variant="outlined"
+                    startIcon={<SelectAll />}
+                    onClick={handleToggleAll}
+                    size="small"
+                    sx={{ py: 0.6 }}
+                  >
+                    Seleccionar todas
+                  </Button>
+
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <TextField
+                      size="small"
+                      type="number"
+                      label="N"
+                      value={randomCount}
+                      onChange={(e) => setRandomCount(parseInt(e.target.value, 10) || 0)}
+                      sx={{ width: '75px', '& input': { py: 0.7 } }}
+                    />
+                    <Button
+                      variant="outlined"
+                      startIcon={<Shuffle />}
+                      onClick={handleRandomSelect}
+                      size="small"
+                      sx={{ py: 0.6 }}
+                    >
+                      Random
+                    </Button>
+                  </Stack>
+                </Stack>
+
+                <Stack direction="row" spacing={1} alignItems="center">
+                  {checked.length > 0 && (
+                    <Chip
+                      size="small"
+                      color="primary"
+                      label={`${checked.length} seleccionada${checked.length > 1 ? 's' : ''}`}
+                    />
+                  )}
+                  {gamesCount > 0 && (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        fontSize: '0.85rem',
+                        color: 'text.secondary',
+                        px: 1,
+                      }}
+                    >
+                      <span>{analyzedCount}</span>
+                      <span>/</span>
+                      <span>{gamesCount}</span>
+                    </Box>
+                  )}
+                </Stack>
+              </Stack>
+            </Stack>
+
+            {/* List of games */}
+            <List
+              ref={listRef}
+              sx={{
+                maxHeight: '48vh',
+                overflow: 'auto',
+                pr: 0.5,
+              }}
+            >
+              {currentGames.length > 0 ? (
+                currentGames.map((game) => (
+                  <GameTile
+                    game={game}
+                    checked={checked}
+                    username={username}
+                    key={game.getGame().id}
+                    index={games.indexOf(game)}
+                    handleToggle={handleToggle}
+                  />
+                ))
+              ) : (
+                <Box
+                  sx={{
+                    textAlign: 'center',
+                    py: 6,
+                    color: 'text.secondary',
+                    border: '1px dashed rgba(255,255,255,0.1)',
+                    borderRadius: 2,
+                  }}
+                >
+                  <Typography variant="body1">
+                    No se encontraron partidas para este criterio de búsqueda.
+                  </Typography>
                 </Box>
               )}
-            </Stack>
-            <List ref={listRef} sx={{ maxHeight: '45vh', overflow: 'auto' }}>
-              {currentGames.map((game) => (
-                <GameTile
-                  game={game}
-                  checked={checked}
-                  username={username}
-                  key={game.getGame().id}
-                  index={games.indexOf(game)}
-                  handleToggle={handleToggle}
-                />
-              ))}
             </List>
-            <Pagination
-              showLastButton
-              showFirstButton
-              page={currentPage}
-              count={totalPages}
-              onChange={handlePageChange}
-              sx={{ alignSelf: 'center' }}
-            />
-            <Stack spacing={5} direction="row">
-              <Button fullWidth variant="contained" onClick={handleSubmit}>
-                Analizar
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Pagination
+                showLastButton
+                showFirstButton
+                page={currentPage}
+                count={totalPages}
+                onChange={handlePageChange}
+                color="primary"
+                sx={{ alignSelf: 'center', my: 1 }}
+              />
+            )}
+
+            {/* Bottom Actions */}
+            <Stack spacing={2} direction="row" sx={{ pt: 1 }}>
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={handleSubmit}
+                startIcon={<PlayArrow />}
+                size="large"
+                sx={{
+                  py: 1.2,
+                  fontWeight: 600,
+                  background: checked.length > 0
+                    ? 'linear-gradient(135deg, #90caf9 0%, #64b5f6 100%)'
+                    : undefined,
+                  color: checked.length > 0 ? '#0f172a' : undefined,
+                }}
+              >
+                Analizar {checked.length > 0 ? `(${checked.length})` : ''}
               </Button>
               <Button
                 fullWidth
                 color="secondary"
-                variant="contained"
+                variant="outlined"
                 onClick={handleBack}
+                startIcon={<ArrowBack />}
+                size="large"
+                sx={{ py: 1.2, fontWeight: 600 }}
               >
                 Atrás
               </Button>

@@ -501,20 +501,45 @@ export default function PositionTrainer({
           {/* Main content - only show board when playing */}
           {gameState.status === 'playing' ? (
             <>
-              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <Chessboard
-                  boardWidth={450}
-                  position={boardPosition}
-                  onPieceDrop={handleDrop}
-                  boardOrientation={currentPos.side}
-                  customBoardStyle={{ borderRadius: '5px' }}
-                  customDarkSquareStyle={{ backgroundColor: '#779756' }}
-                  customLightSquareStyle={{ backgroundColor: '#edeed3' }}
-                  animationDuration={200}
-                />
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  py: 1,
+                }}
+              >
+                <Box
+                  sx={{
+                    borderRadius: '10px',
+                    overflow: 'hidden',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    display: 'inline-block',
+                  }}
+                >
+                  <Chessboard
+                    boardWidth={450}
+                    position={boardPosition}
+                    onPieceDrop={handleDrop}
+                    boardOrientation={currentPos.side}
+                    customBoardStyle={{ borderRadius: '8px' }}
+                    customDarkSquareStyle={{ backgroundColor: '#779756' }}
+                    customLightSquareStyle={{ backgroundColor: '#edeed3' }}
+                    animationDuration={200}
+                  />
+                </Box>
               </Box>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="body1" color="text.secondary">
+              <Box sx={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.75 }}>
+                <Chip
+                  size="small"
+                  label={`Turno: ${currentPos.side === 'white' ? '⚪ Blancas' : '⚫ Negras'}`}
+                  sx={{
+                    fontWeight: 600,
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                  }}
+                />
+                <Typography variant="body2" color="text.secondary">
                   Realiza el mejor movimiento en esta posición
                 </Typography>
               </Box>
@@ -533,6 +558,7 @@ export default function PositionTrainer({
                   justifyContent: 'center',
                   fontWeight: 600,
                   fontSize: '1rem',
+                  borderRadius: 2,
                 }}
               >
                 {gameState.status === 'correct'
@@ -541,7 +567,7 @@ export default function PositionTrainer({
               </Alert>
 
               {gameState.status === 'incorrect' && (
-                <Alert severity="info" variant="outlined">
+                <Alert severity="info" variant="outlined" sx={{ borderRadius: 2 }}>
                   El mejor movimiento era:{' '}
                   <strong>{currentPos.bestMove}</strong>
                 </Alert>
@@ -550,15 +576,24 @@ export default function PositionTrainer({
               {/* Show correct move on board after incorrect */}
               {gameState.status === 'incorrect' && (
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
-                  <Chessboard
-                    boardWidth={350}
-                    position={boardPosition}
-                    arePiecesDraggable={false}
-                    boardOrientation={currentPos.side}
-                    customBoardStyle={{ borderRadius: '5px' }}
-                    customDarkSquareStyle={{ backgroundColor: '#779756' }}
-                    customLightSquareStyle={{ backgroundColor: '#edeed3' }}
-                  />
+                  <Box
+                    sx={{
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                    }}
+                  >
+                    <Chessboard
+                      boardWidth={350}
+                      position={boardPosition}
+                      arePiecesDraggable={false}
+                      boardOrientation={currentPos.side}
+                      customBoardStyle={{ borderRadius: '8px' }}
+                      customDarkSquareStyle={{ backgroundColor: '#779756' }}
+                      customLightSquareStyle={{ backgroundColor: '#edeed3' }}
+                    />
+                  </Box>
                 </Box>
               )}
 
@@ -568,6 +603,7 @@ export default function PositionTrainer({
                     variant="outlined"
                     onClick={handleTryAgain}
                     color="primary"
+                    sx={{ fontWeight: 600 }}
                   >
                     Intentar de nuevo
                   </Button>
@@ -577,6 +613,7 @@ export default function PositionTrainer({
                   onClick={handleNextPosition}
                   color="primary"
                   autoFocus
+                  sx={{ fontWeight: 600, px: 3 }}
                 >
                   Siguiente →
                 </Button>
@@ -586,7 +623,7 @@ export default function PositionTrainer({
 
           {/* Back button */}
           <Box className="flex-end">
-            <Button color="secondary" variant="contained" onClick={handleBack}>
+            <Button color="secondary" variant="outlined" onClick={handleBack} sx={{ fontWeight: 600 }}>
               Atrás
             </Button>
           </Box>

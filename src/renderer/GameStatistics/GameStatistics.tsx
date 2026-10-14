@@ -1,8 +1,11 @@
-import { Button, Paper, Stack, Box } from '@mui/material';
+import { Button, Paper, Stack, Box, Typography, IconButton, Tooltip } from '@mui/material';
 import { Game, GameDecorator } from '../../interfaces';
 import Carousel from 'react-material-ui-carousel';
 import { useNavigate } from 'react-router-dom';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import EmojiEventsRoundedIcon from '@mui/icons-material/EmojiEventsRounded';
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import StatsPieChart from './StatsPieChart';
 import StatsBarChart from './StatsBarChart';
 import RepeatedMistakes from './RepeatedMistakes';
@@ -147,8 +150,25 @@ export default function GameStatistics({
 
   return (
     <Paper className="paper">
-      <Stack>
-        <h1 className="h1-margin">Estadísticas de {username}</h1>
+      <Stack spacing={2}>
+        {/* Header */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1, borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <h1 className="h1-margin">Estadísticas de {username}</h1>
+          <Tooltip title="Volver a partidas">
+            <IconButton
+              aria-label="Volver"
+              onClick={handleBack}
+              sx={{
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                borderRadius: '8px',
+                p: '7px',
+              }}
+            >
+              <ArrowBackIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+
         <Carousel
           swipe={false}
           interval={8000}
@@ -156,21 +176,25 @@ export default function GameStatistics({
           stopAutoPlayOnHover
           className="carousel"
         >
-          <Box>
-            <h2>Victorias</h2>
-            <Stack spacing={2} direction="row" justifyContent="space-evenly">
+          {/* Slide 1: Victorias */}
+          <Box sx={{ p: 1 }}>
+            <h2 className="stats-slide-title">
+              <EmojiEventsRoundedIcon sx={{ color: '#81C784' }} />
+              Victorias
+            </h2>
+            <Stack spacing={2} direction="row" justifyContent="space-between">
               <StatsPieChart
                 title="V/T/D"
                 data={[
                   {
                     value: stats.whiteWins + stats.blackWins,
-                    color: '#C1E1C1',
+                    color: '#81C784',
                     label: 'Victorias',
                   },
-                  { value: stats.draws, color: '#A7C7E7', label: 'Tablas' },
+                  { value: stats.draws, color: '#90CAF9', label: 'Tablas' },
                   {
                     value: stats.losses,
-                    color: '#FAA0A0',
+                    color: '#E57373',
                     label: 'Derrotas',
                   },
                 ]}
@@ -180,12 +204,12 @@ export default function GameStatistics({
                 data={[
                   {
                     value: stats.whiteWins,
-                    color: 'white',
+                    color: '#ffffff',
                     label: 'Victorias con blancas',
                   },
                   {
                     value: stats.blackWins,
-                    color: '#2F4F4F',
+                    color: '#546E7A',
                     label: 'Victorias con negras',
                   },
                 ]}
@@ -195,12 +219,12 @@ export default function GameStatistics({
                 data={[
                   {
                     value: stats.winsAgainstLowerRating,
-                    color: '#E6E6FA',
+                    color: '#CE93D8',
                     label: 'Victorias contra jugadores de menor Elo',
                   },
                   {
                     value: stats.winsAgainstHigherRating,
-                    color: '#483D8B',
+                    color: '#7E57C2',
                     label: 'Victorias contra jugadores de mayor Elo',
                   },
                 ]}
@@ -212,26 +236,31 @@ export default function GameStatistics({
               />
             </Stack>
           </Box>
-          <Box>
-            <h2>Errores</h2>
+
+          {/* Slide 2: Errores */}
+          <Box sx={{ p: 1 }}>
+            <h2 className="stats-slide-title">
+              <WarningAmberRoundedIcon sx={{ color: '#FFB74D' }} />
+              Errores
+            </h2>
             {hasErrors ? (
-              <Stack spacing={2} direction="row" justifyContent="space-evenly">
+              <Stack spacing={2} direction="row" justifyContent="space-between">
                 <StatsPieChart
                   title="I/E/EG"
                   data={[
                     {
                       value: stats.inaccuracies,
-                      color: '#FFFAA0',
+                      color: '#90CAF9',
                       label: 'Imprecisiones',
                     },
                     {
                       value: stats.mistakes,
-                      color: '#FAC898',
+                      color: '#FFB74D',
                       label: 'Errores',
                     },
                     {
                       value: stats.blunders,
-                      color: '#FAA0A0',
+                      color: '#E57373',
                       label: 'Errores graves',
                     },
                   ]}
@@ -241,12 +270,12 @@ export default function GameStatistics({
                   data={[
                     {
                       value: stats.whiteErrors,
-                      color: 'white',
+                      color: '#ffffff',
                       label: 'Errores con blancas',
                     },
                     {
                       value: stats.blackErrors,
-                      color: '#2F4F4F',
+                      color: '#546E7A',
                       label: 'Errores con negras',
                     },
                   ]}
@@ -256,12 +285,12 @@ export default function GameStatistics({
                   data={[
                     {
                       value: stats.errorsAgainstLowerRating,
-                      color: '#E6E6FA',
+                      color: '#CE93D8',
                       label: 'Errores contra jugadores de menor Elo',
                     },
                     {
                       value: stats.errorsAgainstHigherRating,
-                      color: '#483D8B',
+                      color: '#7E57C2',
                       label: 'Errores contra jugadores de mayor Elo',
                     },
                   ]}
@@ -279,20 +308,33 @@ export default function GameStatistics({
             )}
           </Box>
         </Carousel>
-        <Box className="flex-end" sx={{ mb: 2 }}>
+
+        <Box className="flex-end" sx={{ mb: 1, mt: 1 }}>
           <Button
             variant="contained"
             startIcon={<SportsEsportsIcon />}
             onClick={handleTrainer}
             size="large"
-            sx={{ fontSize: '1rem', px: 3, py: 1 }}
+            sx={{
+              fontSize: '0.98rem',
+              fontWeight: 600,
+              px: 3,
+              py: 1,
+              background: 'linear-gradient(135deg, #ffae80 0%, #e28743 100%)',
+              color: '#0f172a',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #ffccbc 0%, #ffae80 100%)',
+              },
+            }}
           >
             📚 Entrenador de Posiciones
           </Button>
         </Box>
+
         <RepeatedMistakes games={games} username={username} />
+
         <Box className="flex-end">
-          <Button color="secondary" variant="contained" onClick={handleBack}>
+          <Button color="secondary" variant="contained" onClick={handleBack} sx={{ fontWeight: 600 }}>
             Atrás
           </Button>
         </Box>

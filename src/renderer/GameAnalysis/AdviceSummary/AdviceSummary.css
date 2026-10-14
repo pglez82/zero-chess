@@ -1,26 +1,74 @@
 .stack {
-  width: 12em;
-  font-size: 0.75em;
+  width: 13.5em;
+  font-size: 0.8rem;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  gap: 0.4rem;
 }
 
 .row {
   display: flex;
+  align-items: center;
+}
+
+.row:first-of-type {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #ffffff;
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .row:not(:first-of-type) span:first-of-type {
-  flex: 0 1 6ch;
+  flex: 0 1 3.5ch;
   text-align: center;
+  font-weight: 700;
+  margin-right: 0.5rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
 }
 
-/* Color constants - also defined in errorColors.ts for use in MoveTable */
+.row:last-of-type {
+  margin-top: 0.3rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-weight: 600;
+  color: #81c784;
+}
+
+.row:last-of-type span:first-of-type {
+  background: rgba(129, 199, 132, 0.15);
+  color: #81c784;
+}
+
+/* Color constants */
 .inaccuracies {
-  color: #a4d7f4; /* inaccuracies */
+  color: #90caf9;
+}
+
+.inaccuracies span:first-of-type {
+  background: rgba(144, 202, 249, 0.18) !important;
+  color: #90caf9;
 }
 
 .mistakes {
-  color: #ffc852; /* mistakes */
+  color: #ffb74d;
+}
+
+.mistakes span:first-of-type {
+  background: rgba(255, 183, 77, 0.18) !important;
+  color: #ffb74d;
 }
 
 .blunders {
-  color: #e79c9c; /* blunders */
+  color: #e57373;
+}
+
+.blunders span:first-of-type {
+  background: rgba(229, 115, 115, 0.18) !important;
+  color: #e57373;
 }

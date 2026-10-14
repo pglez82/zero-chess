@@ -1,13 +1,60 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@700&family=Roboto:wght@100&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
 
 body {
-  background: #161512 linear-gradient(to bottom, #2e2a24, #161512 7em);
-  font-family: 'Noto Sans', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #161512 radial-gradient(circle at 50% 0%, #29241d 0%, #161512 85%);
+  font-family: 'Noto Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   justify-content: center;
   align-items: center;
   position: relative;
-  overflow-y: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   color: #bababa;
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem 1rem;
+}
+
+/* Sleek dark scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+/* Selection highlight */
+::selection {
+  background: rgba(177, 213, 246, 0.3);
+  color: #ffffff;
+}
+
+/* Smooth transitions */
+a, button {
+  transition: all 0.2s ease-in-out;
 }
