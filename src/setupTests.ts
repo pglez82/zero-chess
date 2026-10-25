@@ -1,7 +1,9 @@
 jest.mock('@mui/x-charts', () => ({
-  SparkLineChart: jest.fn(),
-  BarChart: jest.fn(),
-  PieChart: jest.fn(),
+  SparkLineChart: jest.fn(() => null),
+  LineChart: jest.fn(() => null),
+  ChartsReferenceLine: jest.fn(() => null),
+  BarChart: jest.fn(() => null),
+  PieChart: jest.fn(() => null),
 }));
 
 const useNavigateMock = jest.fn();

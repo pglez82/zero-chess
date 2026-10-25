@@ -248,7 +248,12 @@ export default function GameAnalysis() {
 
           {/* Bottom Left: Advantage Chart */}
           <Grid item xs={7}>
-            <AdvantageChart advantage={analysis!.advantage} />
+            <AdvantageChart
+              advantage={analysis?.advantage || []}
+              currentIndex={currentIndex}
+              onMoveClick={replayMoves}
+              moves={moves}
+            />
           </Grid>
 
           {/* Bottom Right: Controls & Summary */}
